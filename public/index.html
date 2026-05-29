@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050508">
+<title>SmartVerse v12</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+
+:root{
+  --bg-0:#050508;--bg-1:#0c0c12;--bg-2:#13131f;
+  --surface:rgba(255,255,255,0.03);--surface-hover:rgba(255,255,255,0.06);
+  --accent:#f59e0b;--accent-glow:rgba(245,158,11,0.15);--accent-2:#fbbf24;
+  --success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+  --text:#f1f5f9;--text-dim:#94a3b8;--text-faint:#475569;
+  --border:rgba(255,255,255,0.06);--border-hover:rgba(245,158,11,0.25);
+  --radius:16px;--shadow:0 20px 60px rgba(0,0,0,0.6);
+  --verse-font:clamp(28px, 4vw, 56px);--ref-font:clamp(14px, 1.8vw, 20px);
+  --sidebar-w:300px;--card-opacity:0.88;
+}
+
+[data-theme="blue"]{--bg-0:#02040a;--bg-1:#080c1a;--bg-2:#0f172a;--accent:#38bdf8;--accent-glow:rgba(56,189,248,0.15);--accent-2:#7dd3fc;--surface:rgba(15,23,42,0.5);--border:rgba(56,189,248,0.08)}
+[data-theme="gold"]{--bg-0:#0f0a04;--bg-1:#1a1208;--bg-2:#2a1e0e;--accent:#fbbf24;--accent-glow:rgba(251,191,36,0.15);--accent-2:#fde68a;--surface:rgba(42,30,10,0.5);--border:rgba(251,191,36,0.08)}
+[data-theme="crimson"]{--bg-0:#0a0404;--bg-1:#140a0a;--bg-2:#1f1010;--accent:#f43f5e;--accent-glow:rgba(244,63,94,0.15);--accent-2:#fda4af;--surface:rgba(30,15,15,0.5);--border:rgba(244,63,94,0.08)}
+[data-theme="forest"]{--bg-0:#040a06;--bg-1:#0a140e;--bg-2:#0f1f16;--accent:#34d399;--accent-glow:rgba(52,211,153,0.15);--accent-2:#6ee7b7;--surface:rgba(15,30,20,0.5);--border:rgba(52,211,153,0.08)}
+[data-theme="light"]{--bg-0:#f8fafc;--bg-1:#f1f5f9;--bg-2:#e2e8f0;--accent:#d97706;--accent-glow:rgba(217,119,6,0.1);--accent-2:#b45309;--text:#0f172a;--text-dim:#475569;--text-faint:#94a3b8;--surface:rgba(255,255,255,0.6);--border:rgba(0,0,0,0.06)}
+[data-theme="chroma"]{--bg-0:#00ff00;--bg-1:#00cc00;--bg-2:#009900;--accent:#000;--accent-glow:rgba(0,0,0,0.1);--accent-2:#333;--text:#000;--text-dim:#333;--text-faint:#666;--surface:rgba(0,255,0,0.8);--border:rgba(0,0,0,0.1)}
+
+html.output-mode, html.output-mode body{background:transparent!important;overflow:hidden}
+html.output-mode #app{display:none!important}
+html.output-mode #output-view{display:flex!important;position:fixed;inset:0;align-items:center;justify-content:center;padding:0;background:transparent;z-index:1}
+
+#output-view{display:none;position:fixed;inset:0;align-items:center;justify-content:center;padding:40px;background:transparent;z-index:1}
+.output-verse-card{background:rgba(5,5,8,var(--card-opacity));border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:48px 56px;max-width:900px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.7), 0 0 80px var(--accent-glow);backdrop-filter:blur(30px);animation:cardEnter 0.6s cubic-bezier(0.4,0,0.2,1)}
+.output-verse-card .ref{font-size:var(--ref-font);font-weight:800;color:var(--accent);margin-bottom:16px;letter-spacing:2px;text-transform:uppercase}
+.output-verse-card .body{font-size:var(--verse-font);line-height:1.6;color:var(--text);font-weight:400;font-family:'Playfair Display','Georgia',serif;text-shadow:0 2px 12px rgba(0,0,0,0.5)}
+.output-verse-card .meta{margin-top:20px;font-size:12px;color:var(--text-faint);text-transform:uppercase;letter-spacing:3px;font-weight:600}
+.output-empty{text-align:center;color:var(--text-faint);display:flex;flex-direction:column;align-items:center;gap:14px;animation:fadeIn 1s ease}
+.output-empty h2{font-size:22px;color:var(--text);font-weight:700}
+.output-empty p{font-size:14px;color:var(--text-dim);max-width:320px}
+
+html.output-mode .mode-obs .output-verse-card{background:transparent!important;backdrop-filter:none!important;border:none!important;box-shadow:none!important;position:absolute;bottom:80px;left:50%;transform:translateX(-50%);max-width:90%;padding:0;animation:none}
+html.output-mode .mode-obs .output-verse-card .body{background:rgba(0,0,0,0.55);backdrop-filter:blur(16px);padding:20px 32px;border-radius:14px;border:1px solid rgba(255,255,255,0.1);font-size:var(--verse-font);text-shadow:0 2px 10px rgba(0,0,0,0.9)}
+html.output-mode .mode-obs .output-verse-card .ref{display:inline-block;background:var(--accent);color:#000;padding:4px 14px;border-radius:8px;font-size:13px;font-weight:800;margin-bottom:10px;text-shadow:none}
+html.output-mode .mode-obs .output-verse-card .meta{display:none}
+
+html.output-mode .mode-lower .output-verse-card{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);max-width:92%;padding:24px 36px;border-bottom:4px solid var(--accent);background:rgba(0,0,0,0.75);backdrop-filter:blur(20px)}
+html.output-mode .mode-lower .output-verse-card .body{font-size:clamp(18px,2.2vw,26px)}
+html.output-mode .mode-pip .output-verse-card{position:absolute;top:24px;right:24px;width:380px;max-width:380px;padding:20px}
+html.output-mode .mode-full .output-verse-card{position:absolute;inset:24px;max-width:none;display:flex;flex-direction:column;justify-content:center}
+
+#app{display:grid;grid-template-rows:56px 1fr;grid-template-columns:var(--sidebar-w) 1fr var(--sidebar-w);grid-template-areas:"topbar topbar topbar" "left center right";height:100vh;width:100vw;background:var(--bg-0);color:var(--text);font-family:'Inter',system-ui,sans-serif}
+#topbar{grid-area:topbar;display:flex;align-items:center;gap:12px;padding:0 20px;background:linear-gradient(180deg, rgba(255,255,255,0.03), transparent);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);z-index:100}
+.brand{font-size:18px;font-weight:800;background:linear-gradient(135deg, var(--accent), var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.3px}
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--accent-glow);color:var(--accent);border:1px solid var(--border-hover)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);transition:all 0.3s}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--text-faint);transition:0.3s}
+.pill .dot.on{background:var(--success);box-shadow:0 0 10px var(--success)}
+.pill .dot.live{background:var(--danger);box-shadow:0 0 12px var(--danger);animation:pulse-dot 1.2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.5)}}
+.timer{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);font-size:13px;letter-spacing:1px}
+.spacer{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-accent{background:linear-gradient(135deg, var(--accent), var(--accent-2));color:#000;box-shadow:0 4px 20px var(--accent-glow)}
+.btn-accent:hover{box-shadow:0 6px 30px var(--accent-glow)}
+.btn-accent.listening{background:linear-gradient(135deg, var(--danger), #b91c1c);color:#fff;animation:pulse-btn 2s infinite}
+@keyframes pulse-btn{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.btn-ghost{background:var(--surface);color:var(--text-dim);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border-hover);color:var(--text);background:var(--surface-hover)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
+
+#sidebar-left{grid-area:left;background:var(--bg-1);border-right:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+#sidebar-right{grid-area:right;background:var(--bg-1);border-left:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.sidebar-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;flex-shrink:0;backdrop-filter:blur(12px);transition:border-color 0.3s}
+.sidebar-section:hover{border-color:var(--border-hover)}
+.sidebar-title{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+
+#center-area{grid-area:center;display:grid;grid-template-rows:1fr 220px;min-height:0;overflow:hidden;position:relative}
+#live-stage{position:relative;display:flex;align-items:center;justify-content:center;padding:32px;overflow:hidden;background:radial-gradient(ellipse at 50% 50%, var(--accent-glow) 0%, transparent 60%), linear-gradient(180deg, var(--bg-0), var(--bg-1));transition:background 0.5s}
+#live-stage.has-bg-img::before{content:'';position:absolute;inset:0;background:var(--stage-bg-img, none);background-size:cover;background-position:center;opacity:var(--stage-bg-opacity, 1);z-index:0}
+#live-stage.has-bg-img>*{position:relative;z-index:1}
+
+.verse-card{background:rgba(12,12,20,var(--card-opacity));border:1px solid var(--border);border-radius:24px;padding:48px 56px;max-width:900px;width:100%;text-align:center;box-shadow:var(--shadow), 0 0 80px var(--accent-glow);backdrop-filter:blur(30px);transition:all 0.5s cubic-bezier(0.4,0,0.2,1);position:relative;z-index:2;animation:cardEnter 0.6s cubic-bezier(0.4,0,0.2,1)}
+@keyframes cardEnter{from{opacity:0;transform:translateY(20px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.verse-card .ref{font-size:var(--ref-font);font-weight:800;color:var(--accent);margin-bottom:16px;letter-spacing:2px;text-transform:uppercase;font-family:'Inter',sans-serif}
+.verse-card .body{font-size:var(--verse-font);line-height:1.6;color:var(--text);font-weight:400;font-family:'Playfair Display','Georgia',serif;text-shadow:0 2px 12px rgba(0,0,0,0.5)}
+.verse-card .meta{margin-top:20px;font-size:12px;color:var(--text-faint);text-transform:uppercase;letter-spacing:3px;font-weight:600}
+.verse-card .actions{position:absolute;top:16px;right:16px;display:flex;gap:6px;opacity:0;transition:opacity 0.3s}
+.verse-card:hover .actions{opacity:1}
+
+.mode-lower .verse-card{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);max-width:90%;padding:24px 36px;border-bottom:4px solid var(--accent);background:rgba(0,0,0,0.7);backdrop-filter:blur(24px);animation:slideUp 0.5s ease}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(30px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.mode-lower .verse-card .body{font-size:clamp(18px,2.2vw,26px)}
+.mode-full .verse-card{position:absolute;inset:20px;max-width:none;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.mode-pip .verse-card{position:absolute;top:20px;right:20px;width:360px;max-width:360px;padding:22px;animation:slideInRight 0.5s ease}
+@keyframes slideInRight{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+.mode-pip .verse-card .body{font-size:16px;line-height:1.5}
+.mode-pip .verse-card .ref{font-size:14px;margin-bottom:10px}
+.mode-obs .verse-card{background:transparent;backdrop-filter:none;border:none;box-shadow:none;position:absolute;bottom:60px;left:50%;transform:translateX(-50%);max-width:90%;padding:0}
+.mode-obs .verse-card .body{background:rgba(0,0,0,0.5);backdrop-filter:blur(16px);padding:20px 32px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);font-size:var(--verse-font);text-shadow:0 2px 10px rgba(0,0,0,0.8)}
+.mode-obs .verse-card .ref{display:inline-block;background:var(--accent);color:#000;padding:4px 14px;border-radius:8px;font-size:13px;font-weight:800;margin-bottom:10px;text-shadow:none}
+.mode-obs .verse-card .meta, .mode-obs .verse-card .actions{display:none}
+
+.empty-state{text-align:center;color:var(--text-faint);display:flex;flex-direction:column;align-items:center;gap:14px;z-index:2;max-width:420px;animation:fadeIn 1s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.empty-state .icon{width:64px;height:64px;border-radius:20px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.empty-state .icon svg{width:28px;height:28px;opacity:0.4}
+.empty-state h2{font-size:22px;color:var(--text);font-weight:700;letter-spacing:-0.3px}
+.empty-state p{font-size:14px;line-height:1.7;color:var(--text-dim);max-width:320px}
+.empty-state .api-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);margin-top:4px}
+.empty-state .api-pill.ok{border-color:rgba(16,185,129,0.3);color:var(--success);background:rgba(16,185,129,0.08)}
+.empty-state .api-pill.warn{border-color:rgba(245,158,11,0.3);color:var(--warning);background:rgba(245,158,11,0.08)}
+
+#loader{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:10}
+#loader .spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#preview-panel{background:var(--bg-1);border-top:1px solid var(--border);padding:14px 18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;min-height:0;overflow:hidden}
+.preview-col{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden}
+.preview-col-title{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;color:var(--text-dim);flex-shrink:0}
+.transcript-box{flex:1;min-height:0;background:var(--bg-0);border-radius:12px;border:1px solid var(--border);padding:12px 14px;font-size:13px;line-height:1.6;color:var(--text-dim);overflow-y:auto;word-break:break-word;font-family:'Inter',sans-serif}
+.transcript-box .final{color:var(--text)}
+.transcript-box .interim{color:var(--text-faint);font-style:italic}
+.transcript-box .live-indicator{display:inline-flex;align-items:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--danger);font-weight:700;margin-bottom:6px}
+.transcript-box .live-indicator .pulse{width:7px;height:7px;border-radius:50%;background:var(--danger);animation:pulse-dot 1.2s infinite}
+.detected-line{font-size:12px;color:var(--text-faint);padding:4px 0}
+.detected-line b{color:var(--accent)}
+.parser-debug{font-size:11px;color:var(--text-faint);font-family:'SF Mono',monospace;padding:6px 10px;background:var(--bg-0);border-radius:8px;border:1px solid var(--border)}
+.keyword-chip{display:inline-block;padding:4px 10px;border-radius:8px;background:var(--bg-0);border:1px solid var(--border);font-size:12px;color:var(--text-dim);cursor:pointer;margin:3px;transition:all 0.2s;font-weight:500}
+.keyword-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);transform:translateY(-1px)}
+.history-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
+.history-item{padding:10px 12px;background:var(--bg-0);border-radius:10px;border-left:3px solid var(--accent);font-size:12px;cursor:pointer;transition:all 0.2s;flex-shrink:0}
+.history-item:hover{background:var(--surface-hover);transform:translateX(3px)}
+.history-item .h-ref{color:var(--accent);font-weight:700;font-size:12px;margin-bottom:3px}
+.history-item .h-text{color:var(--text-dim);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:11px}
+.history-item .h-time{color:var(--text-faint);font-size:10px;margin-top:4px}
+
+.queue-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.queue-item{padding:10px 12px;background:var(--bg-0);border-radius:10px;border-left:3px solid var(--warning);font-size:12px;cursor:pointer;transition:all 0.2s;flex-shrink:0;position:relative}
+.queue-item:hover{background:var(--surface-hover);transform:translateX(3px)}
+.queue-item .q-ref{color:var(--accent);font-weight:700;font-size:12px;margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.queue-item .q-text{color:var(--text-dim);line-height:1.5;font-size:11px}
+.queue-item .q-time{color:var(--text-faint);font-size:10px;margin-top:4px;display:flex;align-items:center;gap:8px}
+.queue-item .q-confidence{font-size:9px;padding:2px 6px;border-radius:4px;background:var(--accent-glow);color:var(--accent);font-weight:700}
+.queue-item .q-actions{display:flex;gap:4px;margin-top:6px}
+.queue-item .q-actions .btn{padding:4px 8px;font-size:10px}
+.queue-empty{padding:10px;color:var(--text-faint);font-size:12px;text-align:center}
+
+input[type="text"],input[type="password"],input[type="color"],input[type="file"],select,textarea{width:100%;padding:8px 12px;background:var(--bg-0);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:all 0.2s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+select option{background:var(--bg-2);color:var(--text)}
+label{font-size:11px;color:var(--text-dim);margin-bottom:6px;display:block;font-weight:500}
+input[type="range"]{width:100%;-webkit-appearance:none;height:4px;background:var(--border);border-radius:2px;margin-top:4px}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 10px var(--accent-glow)}
+.row{display:flex;gap:6px;margin-top:8px}
+.row .btn{flex:1;justify-content:center}
+.file-input-wrap{position:relative;overflow:hidden;display:inline-block;width:100%}
+.file-input-wrap input[type=file]{position:absolute;left:0;top:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.file-input-btn{display:block;width:100%;padding:8px 12px;background:var(--bg-0);border:1px dashed var(--border);border-radius:10px;color:var(--text-dim);font-size:12px;text-align:center;cursor:pointer;transition:all 0.2s}
+.file-input-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.waveform-wrap{height:56px;background:var(--bg-0);border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:10px;position:relative}
+.waveform-wrap canvas{display:block;width:100%;height:100%}
+.device-list{display:flex;flex-direction:column;gap:4px;max-height:120px;overflow-y:auto}
+.device-chip{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;font-size:12px;background:var(--bg-0);border:1px solid var(--border);cursor:pointer;transition:all 0.2s}
+.device-chip:hover{border-color:var(--border-hover)}
+.device-chip.active{border-color:var(--accent);background:var(--accent-glow)}
+.device-chip input{accent-color:var(--accent);width:14px;height:14px;margin:0}
+.mic-status{font-size:11px;color:var(--text-faint);margin-bottom:8px;font-weight:500}
+.mic-status.connected{color:var(--success)}
+
+#toasts{position:fixed;top:16px;right:16px;z-index:10000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:14px;padding:12px 18px;min-width:240px;max-width:340px;font-size:13px;color:var(--text);box-shadow:var(--shadow);animation:toastIn 0.4s cubic-bezier(0.4,0,0.2,1);pointer-events:all;backdrop-filter:blur(20px)}
+.toast.ok{border-left-color:var(--success)}
+.toast.bad{border-left-color:var(--danger)}
+.toast.warn{border-left-color:var(--warning)}
+@keyframes toastIn{from{transform:translateX(100%) scale(0.9);opacity:0}to{transform:translateX(0) scale(1);opacity:1}}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.modal-bg.on{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px;max-width:520px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow);backdrop-filter:blur(30px);animation:modalIn 0.4s cubic-bezier(0.4,0,0.2,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-box h2{margin-bottom:16px;font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.modal-box p,.modal-box li{font-size:13px;line-height:1.8;color:var(--text-dim);margin-bottom:8px}
+.modal-box ol{padding-left:20px}
+.modal-box code{background:var(--bg-0);padding:3px 7px;border-radius:6px;font-family:'SF Mono',monospace;font-size:12px;color:var(--accent);border:1px solid var(--border)}
+.obs-url-box{background:var(--bg-0);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:12px;color:var(--text-dim);word-break:break-all;margin-top:12px;display:flex;align-items:center;gap:10px}
+.obs-url-box input{background:transparent;border:none;color:var(--accent);font-size:12px;flex:1;outline:none;font-family:'SF Mono',monospace}
+.toggle-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer}
+.toggle-wrap input[type="checkbox"]{width:36px;height:20px;-webkit-appearance:none;background:var(--bg-0);border-radius:20px;border:1px solid var(--border);position:relative;cursor:pointer;outline:none;transition:0.3s}
+.toggle-wrap input[type="checkbox"]::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:var(--text-dim);top:2px;left:2px;transition:0.3s}
+.toggle-wrap input[type="checkbox"]:checked{background:var(--accent-glow);border-color:var(--accent)}
+.toggle-wrap input[type="checkbox"]:checked::after{background:var(--accent);left:18px}
+.toggle-wrap span{font-size:12px;color:var(--text-dim);font-weight:500}
+
+.download-panel{background:var(--bg-0);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:10px}
+.download-progress{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:8px}
+.download-progress-bar{height:100%;background:linear-gradient(90deg, var(--accent), var(--accent-2));width:0%;transition:width 0.3s;border-radius:3px}
+.download-status{font-size:11px;color:var(--text-dim);margin-top:6px;display:flex;justify-content:space-between}
+.bible-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;background:var(--surface);border:1px solid var(--border);color:var(--text-dim)}
+.bible-status.full{border-color:rgba(16,185,129,0.3);color:var(--success);background:rgba(16,185,129,0.08)}
+.bible-status.partial{border-color:rgba(245,158,11,0.3);color:var(--warning);background:rgba(245,158,11,0.08)}
+.semantic-indicator{font-size:10px;color:var(--text-faint);padding:4px 8px;background:var(--bg-0);border-radius:6px;border:1px solid var(--border);margin-top:6px;display:none}
+.semantic-indicator.active{display:block;color:var(--accent);border-color:var(--accent);background:var(--accent-glow)}
+
+/* Settings Panel */
+.settings-panel{position:fixed;top:56px;right:0;bottom:0;width:320px;background:var(--bg-1);border-left:1px solid var(--border);z-index:200;overflow-y:auto;animation:slideInRight 0.3s ease}
+.settings-panel-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700}
+.settings-panel-body{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.settings-panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;backdrop-filter:blur(4px)}
+
+@media(max-width:1024px){
+  #app{grid-template-columns:1fr;grid-template-rows:56px auto 1fr auto;grid-template-areas:"topbar" "left" "center" "right"}
+  #sidebar-left,#sidebar-right{max-height:30vh;border:none;border-top:1px solid var(--border)}
+  #preview-panel{grid-template-columns:1fr}
+  .settings-panel{width:100%}
+}
+</style>
+<script>
+  if(location.href.includes('view=output')){ document.documentElement.classList.add('output-mode'); }
+</script>
+</head>
+<body>
+
+<div id="output-view">
+  <div id="output-stage" class="mode-center">
+    <div class="output-verse-card" id="output-verse-card" style="display:none">
+      <div class="ref" id="output-ref"></div>
+      <div class="body" id="output-body"></div>
+      <div class="meta" id="output-meta"></div>
+    </div>
+    <div class="output-empty" id="output-empty">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32" style="opacity:0.3">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </div>
+      <h2>SmartVerse Output</h2>
+      <p>Waiting for scripture from the controller window...</p>
+      <div style="margin-top:12px;font-size:11px;color:var(--text-faint);max-width:320px;text-align:center;line-height:1.5">
+        <div id="output-status" style="margin-bottom:8px">Status: Initializing...</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+          <button class="btn btn-sm btn-accent" data-cmd="testOutputLocal">Test Display</button>
+          <button class="btn btn-sm btn-ghost" data-cmd="forceSyncOutput">Force Sync</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <header id="topbar">
+    <div class="brand">SmartVerse</div>
+    <div class="badge">v12</div>
+    <div class="pill" id="statusPill"><div class="dot" id="statusDot"></div><span id="statusText">Ready</span></div>
+    <div class="pill timer" id="timerDisplay">00:00:00</div>
+    <div class="spacer"></div>
+    <div class="bible-status partial" id="bibleStatus">Partial Bible</div>
+    <button class="btn btn-accent" id="btnListen" data-cmd="toggleListen" disabled><span id="listenIcon">&#9679;</span> <span id="listenText">Listen</span></button>
+    <button class="btn btn-ghost" data-cmd="clearStage">Clear</button>
+    <button class="btn btn-ghost" data-cmd="openOutput">Output</button>
+    <button class="btn btn-ghost" data-cmd="showModal" data-modal-target="obsModal">OBS</button>
+    <button class="btn btn-ghost" data-cmd="toggleFullscreen">Full</button>
+    <button class="btn btn-ghost" id="btnSettings" data-cmd="toggleSettings" title="Settings">&#9776;</button>
+    <button class="btn btn-ghost" data-cmd="showModal" data-modal-target="helpModal">Help</button>
+  </header>
+
+  <aside id="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Bible Library</div>
+      <div class="bible-status partial" id="bibleStatus2">Partial Bible (150 verses)</div>
+      <div class="download-panel" id="downloadPanel" style="display:none">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">Downloading Full KJV Bible...</div>
+        <div class="download-progress"><div class="download-progress-bar" id="downloadBar"></div></div>
+        <div class="download-status"><span id="downloadBook">Starting...</span><span id="downloadPercent">0%</span></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-accent" style="flex:1" id="btnDownload" data-cmd="downloadFullBible">Download Full Bible</button>
+        <button class="btn btn-ghost" style="flex:1;display:none" id="btnCancelDownload" data-cmd="cancelDownload">Cancel</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-ghost" style="flex:1;font-size:11px" id="btnClearDB" data-cmd="clearBibleDB">Reset Bible Data</button>
+      </div>
+      <div style="font-size:10px;color:var(--text-faint);margin-top:8px;line-height:1.4"><strong>Offline Mode:</strong> Once downloaded, every verse works without internet. ~4 MB download.</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Microphone</div>
+      <div class="mic-status" id="micStatus">Disconnected</div>
+      <div class="waveform-wrap"><canvas id="waveCanvas" width="260" height="56"></canvas></div>
+      <div class="device-list" id="deviceList">
+        <div class="device-chip active" data-id="default" data-cmd="pickDevice" data-device-id="default">
+          <input type="radio" name="mic" checked data-cmd="pickDevice" data-device-id="default"><span>Default Mic</span>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-accent" style="flex:1" id="btnConnect" data-cmd="connectMic">Connect Mic</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Speech Engine</div>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="useBrowserSpeech" data-change-cmd="saveCfg">
+        <span>Use Browser Speech (Real-time)</span>
+      </label>
+      <div style="font-size:11px;color:var(--text-faint);margin-bottom:10px;line-height:1.5">Recommended: Instant live transcription. No API key needed.</div>
+      <div id="dgKeyWrap">
+        <label>Deepgram API Key (Batch Mode)</label>
+        <input type="password" id="dgKey" placeholder="Paste key for higher accuracy" data-input-cmd="saveCfg">
+        <div style="font-size:10px;color:var(--text-faint);margin-top:4px">Free at deepgram.com</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Timer</div>
+      <div class="row">
+        <button class="btn btn-ghost" style="flex:1" data-cmd="timerStart">Start</button>
+        <button class="btn btn-ghost" style="flex:1" data-cmd="timerReset">Reset</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="sidebar-title">
+        Detection Queue
+        <div style="display:flex;gap:4px;align-items:center">
+          <label class="toggle-wrap" style="margin:0;gap:6px">
+            <input type="checkbox" id="autoDisplay" data-change-cmd="saveCfg" style="width:28px;height:16px"><span style="font-size:10px">Auto</span>
+          </label>
+          <button class="btn btn-sm btn-ghost" data-cmd="clearQueue" style="padding:3px 8px;font-size:10px">Clear</button>
+        </div>
+      </div>
+      <div class="queue-list" id="queueList"><div class="queue-empty">Queue is empty. Start listening to detect verses.</div></div>
+      <div class="semantic-indicator" id="semanticIndicator">Semantic search running...</div>
+    </div>
+  </aside>
+
+  <div id="center-area">
+    <section id="live-stage" class="mode-center">
+      <div id="loader"><div class="spin"></div><div style="font-size:14px;color:var(--text-dim);margin-top:10px">Loading scripture...</div></div>
+      <div class="verse-card" id="verseCard" style="display:none">
+        <div class="actions">
+          <button class="btn btn-sm btn-ghost" data-cmd="prevVerse" title="Previous verse">&#9664;&#9664;</button>
+          <button class="btn btn-sm btn-ghost" data-cmd="copyCurrent">Copy</button>
+          <button class="btn btn-sm btn-ghost" data-cmd="clearStage">Close</button>
+          <button class="btn btn-sm btn-ghost" data-cmd="nextVerse" title="Next verse">&#9654;&#9654;</button>
+        </div>
+        <div class="ref" id="vRef"></div>
+        <div class="body" id="vBody"></div>
+        <div class="meta" id="vMeta"></div>
+      </div>
+      <div class="empty-state" id="emptyState">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+        <h2>Ready to Display Scripture</h2>
+        <p>Speak a reference, type it manually, or click a keyword. The verse appears instantly.</p>
+        <div class="api-pill" id="apiStatus">Checking Bible Library...</div>
+      </div>
+    </section>
+
+    <section id="preview-panel">
+      <div class="preview-col">
+        <div class="preview-col-title">Live Transcript</div>
+        <div class="transcript-box" id="transcriptBox"><div class="heard-label">Click "Listen" to start real-time transcription</div></div>
+        <div class="detected-line">Detected: <b id="lastDetected">--</b></div>
+        <div class="parser-debug" id="parserDebug">Parser: waiting...</div>
+      </div>
+      <div class="preview-col">
+        <div class="preview-col-title">Quick Test</div>
+        <input type="text" id="testParser" placeholder='Try: "John chapter 3 verse 16"' data-enter-cmd="testParser" style="margin-bottom:8px">
+        <div class="row">
+          <button class="btn btn-sm btn-accent" data-cmd="testParser">Test</button>
+          <button class="btn btn-sm btn-ghost" data-cmd="testParserClear">Clear</button>
+        </div>
+        <div class="preview-col-title" style="margin-top:12px">Quick Verses</div>
+        <div id="keywordList" style="display:flex;flex-wrap:wrap;margin-top:4px"></div>
+      </div>
+      <div class="preview-col">
+        <div class="preview-col-title">Recent Detections</div>
+        <div id="recentList" style="display:flex;flex-wrap:wrap;max-height:90px;overflow-y:auto"></div>
+        <div class="preview-col-title" style="margin-top:12px">System Status</div>
+        <div style="font-size:12px;color:var(--text-dim);line-height:1.8">
+          <div>Mic: <span id="micStatus2">Disconnected</span></div>
+          <div>Bible: <span id="bibleStatus3">Partial</span></div>
+          <div>Mode: <span id="modeStatus">Center Stage</span></div>
+          <div>Engine: <span id="engineStatus">Deepgram</span></div>
+          <div>Restarts: <span id="restartCount">0</span></div>
+          <div>Queue: <span id="queueCount">0</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <aside id="sidebar-right">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Manual Entry</div>
+      <input type="text" id="manualInput" placeholder="e.g. John 3:16" data-enter-cmd="manualSearch">
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-accent" style="flex:1" data-cmd="manualSearch">Search</button>
+        <button class="btn btn-ghost" style="flex:1" data-cmd="randomVerse">Random</button>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-faint)">Try: Romans 8:28, Psalm 23, 1 John 4:8</div>
+    </div>
+
+    <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="sidebar-title">
+        History
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-ghost" data-cmd="exportHistory" style="padding:3px 8px;font-size:10px">Export</button>
+          <button class="btn btn-sm btn-ghost" data-cmd="clearHistory" style="padding:3px 8px;font-size:10px">Clear</button>
+        </div>
+      </div>
+      <div class="history-list" id="historyList"><div style="padding:10px;color:var(--text-faint);font-size:12px;text-align:center">No verses yet</div></div>
+    </div>
+
+    <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="sidebar-title">
+        Output Log
+        <span style="font-size:9px;color:var(--text-faint);font-weight:400">All displayed verses</span>
+      </div>
+      <div class="history-list" id="outputLogList">
+        <div style="padding:10px;color:var(--text-faint);font-size:12px;text-align:center">No verses displayed yet</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="settings-panel" id="settingsPanel" style="display:none">
+  <div class="settings-panel-header"><span>Display Settings</span><button class="btn btn-sm btn-ghost" data-cmd="toggleSettings">&times;</button></div>
+  <div class="settings-panel-body">
+    <div><label>Translation</label><select id="selTrans" data-change-cmd="saveCfg">
+      <option value="kjv">KJV (Local)</option><option value="niv">NIV (API)</option><option value="esv">ESV (API)</option>
+      <option value="nasb">NASB (API)</option><option value="nlt">NLT (API)</option><option value="asv">ASV (API)</option>
+      <option value="web">WEB (API)</option><option value="bbe">BBE (API)</option>
+    </select></div>
+    <div><label>Output Mode</label><select id="selMode" data-change-cmd="setMode">
+      <option value="center">Center Stage</option><option value="lower">Lower Third</option>
+      <option value="full">Full Screen</option><option value="pip">PiP</option><option value="obs">OBS Overlay</option>
+    </select></div>
+    <div><label>Theme</label><select id="selTheme" data-change-cmd="setTheme">
+      <option value="dark">Midnight</option><option value="blue">Royal Blue</option><option value="gold">Gold</option>
+      <option value="crimson">Crimson</option><option value="forest">Forest</option><option value="light">Light</option>
+      <option value="chroma">Chroma Key (Green)</option>
+    </select></div>
+    <div><label>Background Image</label>
+      <div class="file-input-wrap"><div class="file-input-btn" id="bgImageLabel">Click to upload image</div><input type="file" id="bgImageInput" accept="image/*" data-change-cmd="handleBgImage"></div>
+      <div class="row" style="margin-top:6px"><button class="btn btn-sm btn-ghost" data-cmd="clearBgImage">Remove</button></div>
+    </div>
+    <div><label>Image Opacity (<span id="bgOpacityVal">100</span>%)</label><input type="range" id="bgOpacity" min="10" max="100" value="100" data-input-cmd="setBgOpacity"></div>
+    <div><label>Card Opacity (<span id="cardOpacityVal">88</span>%)</label><input type="range" id="cardOpacity" min="0" max="100" value="88" data-input-cmd="setCardOpacity"></div>
+    <div><label>Custom Background</label><input type="color" id="customBg" value="#050508" data-change-cmd="setCustomBg"></div>
+    <div><label>Verse Size (<span id="fontVal">28</span>px)</label><input type="range" id="rngFont" min="16" max="64" value="28" data-input-cmd="setFont"></div>
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+      <label>Backend Sync</label>
+      <p style="font-size:11px;color:var(--text-dim);margin:4px 0">Auto-connects to same server. For external backend, enter URL below.</p>
+      <input type="text" id="backendUrl" placeholder="Auto (same server)" style="width:100%;margin-bottom:6px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text)" value="">
+      <div id="backendStatus" class="api-pill">Connecting...</div>
+    </div>
+</div>
+</div>
+
+<div class="modal-bg" id="obsModal" data-modal-bg="obsModal">
+  <div class="modal-box">
+    <h2>OBS / vMix Setup</h2>
+    <p><strong>Method 1: Popup Window + Window Capture (Recommended)</strong></p>
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.6">OBS/vMix Browser Source runs in an isolated browser that cannot share data with your main browser. The reliable method is:</p>
+    <ol style="font-size:12px;color:var(--text-dim);line-height:1.8">
+      <li>Click <strong>Output</strong> button in top bar</li>
+      <li>A clean popup window opens</li>
+      <li>In OBS/vMix, add <strong>Window Capture</strong> (NOT Browser Source)</li>
+      <li>Select the "SmartVerse Output" popup window</li>
+      <li>Crop/Pad to remove window borders if needed</li>
+    </ol>
+    <p style="margin-top:14px"><strong>Method 2: Browser Source (Same browser only)</strong></p>
+    <div class="obs-url-box"><input type="text" id="obsUrlInput" readonly><button class="btn btn-sm btn-accent" data-cmd="copyObsUrl">Copy</button></div>
+    <p style="margin-top:14px"><strong>Browser Source Settings:</strong></p>
+    <ul style="font-size:12px">
+      <li>Width: <code>1920</code> Height: <code>1080</code></li>
+      <li>Custom CSS: <code>body{background:transparent;}</code></li>
+      <li>Shutdown source when not visible: <strong>UNCHECK</strong></li>
+      <li>Refresh browser when scene becomes active: <strong>UNCHECK</strong></li>
+    </ul>
+    <div style="text-align:right;margin-top:18px">
+      <button class="btn btn-accent" data-cmd="openOutput">Open Output Window</button>
+      <button class="btn btn-accent" data-cmd="testObsOutput" style="margin-left:8px">Test Output</button>
+      <button class="btn btn-ghost" data-cmd="hideModal" data-modal-target="obsModal" style="margin-left:8px">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="helpModal" data-modal-bg="helpModal">
+  <div class="modal-box">
+    <h2>Quick Help</h2>
+    <p><strong>1. Download Bible:</strong> Click <strong>Download Full Bible</strong> to store all 31,102 verses locally.</p>
+    <p><strong>2. Connect Mic:</strong> Click <strong>Connect Mic</strong>. Allow browser permission.</p>
+    <p><strong>3. Listen:</strong> Click <strong>Listen</strong> (or press Space). Speak naturally.</p>
+    <p><strong>4. Prev/Next:</strong> Use <strong>&lt;&lt;</strong> and <strong>&gt;&gt;</strong> buttons on the verse card to navigate.</p>
+    <p><strong>5. Output:</strong> Click <strong>Output</strong> button for a clean popup window. Use Window Capture in OBS/vMix.</p>
+    <p><strong>Hotkeys:</strong> Space = Listen/Stop, Esc = Clear, F = Fullscreen, Enter = Search</p>
+    <div style="text-align:right;margin-top:18px"><button class="btn btn-accent" data-cmd="hideModal" data-modal-target="helpModal">Got it</button></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+</script><script>
+// ==================== EMERGENCY INLINE BIBLE ====================
+const EMERGENCY_BIBLE = {
+"genesis":{"1":{"1":"In the beginning God created the heaven and the earth."},"2":{"24":"Therefore shall a man leave his father and his mother, and shall cleave unto his wife: and they shall be one flesh."}},
+"exodus":{"14":{"14":"The LORD shall fight for you, and ye shall hold your peace."}},
+"leviticus":{"19":{"18":"Thou shalt not avenge, nor bear any grudge against the children of thy people, but thou shalt love thy neighbour as thyself: I am the LORD."}},
+"numbers":{"6":{"24":"The LORD bless thee, and keep thee:","25":"The LORD make his face shine upon thee, and be gracious unto thee:","26":"The LORD lift up his countenance upon thee, and give thee peace."}},
+"deuteronomy":{"6":{"4":"Hear, O Israel: The LORD our God is one LORD:","5":"And thou shalt love the LORD thy God with all thine heart, and with all thy soul, and with all thy might."},"31":{"6":"Be strong and of a good courage, fear not, nor be afraid of them: for the LORD thy God, he it is that doth go with thee; he will not fail thee, nor forsake thee."}},
+"joshua":{"1":{"8":"This book of the law shall not depart out of thy mouth; but thou shalt meditate therein day and night, that thou mayest observe to do according to all that is written therein: for then thou shalt make thy way prosperous, and then thou shalt have good success.","9":"Have not I commanded thee? Be strong and of a good courage; be not afraid, neither be thou dismayed: for the LORD thy God is with thee whithersoever thou goest."}},
+"ruth":{"1":{"16":"And Ruth said, Intreat me not to leave thee, or to return from following after thee: for whither thou goest, I will go; and where thou lodgest, I will lodge: thy people shall be my people, and thy God my God:"}},
+"1 samuel":{"16":{"7":"But the LORD said unto Samuel, Look not on his countenance, or on the height of his stature; because I have refused him: for the LORD seeth not as man seeth; for man looketh on the outward appearance, but the LORD looketh on the heart."}},
+"1 chronicles":{"16":{"11":"Seek the LORD and his strength, seek his face continually."}},
+"2 chronicles":{"7":{"14":"If my people, which are called by my name, shall humble themselves, and pray, and seek my face, and turn from their wicked ways; then will I hear from heaven, and will forgive their sin, and will heal their land."}},
+"nehemiah":{"8":{"10":"Then he said unto them, Go your way, eat the fat, and drink the sweet, and send portions unto them for whom nothing is prepared: for this day is holy unto our Lord: neither be ye sorry; for the joy of the LORD is your strength."}},
+"esther":{"4":{"14":"For if thou altogether holdest thy peace at this time, then shall there enlargement and deliverance arise to the Jews from another place; but thou and thy father's house shall be destroyed: and who knoweth whether thou art come to the kingdom for such a time as this?"}},
+"job":{"1":{"21":"And said, Naked came I out of my mother's womb, and naked shall I return thither: the LORD gave, and the LORD hath taken away; blessed be the name of the LORD."}},
+"psalms":{"1":{"1":"Blessed is the man that walketh not in the counsel of the ungodly, nor standeth in the way of sinners, nor sitteth in the seat of the scornful.","2":"But his delight is in the law of the LORD; and in his law doth he meditate day and night.","3":"And he shall be like a tree planted by the rivers of water, that bringeth forth his fruit in his season; his leaf also shall not wither; and whatsoever he doeth shall prosper."},"9":{"10":"And they that know thy name will put their trust in thee: for thou, LORD, hast not forsaken them that seek thee."},"16":{"11":"Thou wilt shew me the path of life: in thy presence is fulness of joy; at thy right hand there are pleasures for evermore."},"19":{"14":"Let the words of my mouth, and the meditation of my heart, be acceptable in thy sight, O LORD, my strength, and my redeemer."},"23":{"1":"The LORD is my shepherd; I shall not want.","2":"He maketh me to lie down in green pastures: he leadeth me beside the still waters.","3":"He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.","4":"Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.","5":"Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.","6":"Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever."},"27":{"1":"The LORD is my light and my salvation; whom shall I fear? the LORD is the strength of my life; of whom shall I be afraid?"},"37":{"4":"Delight thyself also in the LORD; and he shall give thee the desires of thine heart.","5":"Commit thy way unto the LORD; trust also in him; and he shall bring it to pass."},"46":{"1":"God is our refuge and strength, a very present help in trouble."},"51":{"10":"Create in me a clean heart, O God; and renew a right spirit within me."},"55":{"22":"Cast thy burden upon the LORD, and he shall sustain thee: he shall never suffer the righteous to be moved."},"91":{"1":"He that dwelleth in the secret place of the most High shall abide under the shadow of the Almighty.","2":"I will say of the LORD, He is my refuge and my fortress: my God; in him will I trust."},"103":{"1":"Bless the LORD, O my soul: and all that is within me, bless his holy name.","2":"Bless the LORD, O my soul, and forget not all his benefits:","3":"Who forgiveth all thine iniquities; who healeth all thy diseases;","4":"Who redeemeth thy life from destruction; who crowneth thee with lovingkindness and tender mercies;","5":"Who satisfieth thy mouth with good things; so that thy youth is renewed like the eagle's."},"118":{"24":"This is the day which the LORD hath made; we will rejoice and be glad in it."},"119":{"11":"Thy word have I hid in mine heart, that I might not sin against thee."},"121":{"1":"I will lift up mine eyes unto the hills, from whence cometh my help.","2":"My help cometh from the LORD, which made heaven and earth."},"139":{"14":"I will praise thee; for I am fearfully and wonderfully made: marvellous are thy works; and that my soul knoweth right well."},"145":{"18":"The LORD is nigh unto all them that call upon him, to all that call upon him in truth."},"147":{"3":"He healeth the broken in heart, and bindeth up their wounds."}},
+"proverbs":{"1":{"7":"The fear of the LORD is the beginning of knowledge: but fools despise wisdom and instruction."},"3":{"5":"Trust in the LORD with all thine heart; and lean not unto thine own understanding.","6":"In all thy ways acknowledge him, and he shall direct thy paths."},"4":{"23":"Keep thy heart with all diligence; for out of it are the issues of life."},"16":{"3":"Commit thy works unto the LORD, and thy thoughts shall be established."},"17":{"17":"A friend loveth at all times, and a brother is born for adversity."},"18":{"21":"Death and life are in the power of the tongue: and they that love it shall eat the fruit thereof."},"22":{"6":"Train up a child in the way he should go: and when he is old, he will not depart from it."}},
+"ecclesiastes":{"3":{"1":"To every thing there is a season, and a time to every purpose under the heaven:","11":"He hath made every thing beautiful in his time: also he hath set the world in their heart, so that no man can find out the work that God maketh from the beginning to the end."},"12":{"13":"Let us hear the conclusion of the whole matter: Fear God, and keep his commandments: for this is the whole duty of man."}},
+"song of solomon":{"8":{"6":"Set me as a seal upon thine heart, as a seal upon thine arm: for love is strong as death; jealousy is cruel as the grave: the coals thereof are coals of fire, which hath a most vehement flame.","7":"Many waters cannot quench love, neither can the floods drown it: if a man would give all the substance of his house for love, it would utterly be contemned."}},
+"isaiah":{"26":{"3":"Thou wilt keep him in perfect peace, whose mind is stayed on thee: because he trusteth in thee."},"40":{"31":"But they that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint."},"41":{"10":"Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee; yea, I will uphold thee with the right hand of my righteousness."},"53":{"5":"But he was wounded for our transgressions, he was bruised for our iniquities: the chastisement of our peace was upon him; and with his stripes we are healed."},"55":{"8":"For my thoughts are not your thoughts, neither are your ways my ways, saith the LORD.","9":"For as the heavens are higher than the earth, so are my ways higher than your ways, and my thoughts than your thoughts."}},
+"jeremiah":{"17":{"7":"Blessed is the man that trusteth in the LORD, and whose hope the LORD is."},"29":{"11":"For I know the thoughts that I think toward you, saith the LORD, thoughts of peace, and not of evil, to give you an expected end."},"33":{"3":"Call unto me, and I will answer thee, and shew thee great and mighty things, which thou knowest not."}},
+"lamentations":{"3":{"22":"It is of the LORD'S mercies that we are not consumed, because his compassions fail not.","23":"They are new every morning: great is thy faithfulness."}},
+"ezekiel":{"36":{"26":"A new heart also will I give you, and a new spirit will I put within you: and I will take away the stony heart out of your flesh, and I will give you an heart of flesh."}},
+"hosea":{"6":{"3":"Then shall we know, if we follow on to know the LORD: his going forth is prepared as the morning; and he shall come unto us as the rain, as the latter and former rain unto the earth."}},
+"joel":{"2":{"28":"And it shall come to pass afterward, that I will pour out my spirit upon all flesh; and your sons and your daughters shall prophesy, your old men shall dream dreams, your young men shall see visions:"}},
+"amos":{"5":{"24":"But let judgment run down as waters, and righteousness as a mighty stream."}},
+"micah":{"6":{"8":"He hath shewed thee, O man, what is good; and what doth the LORD require of thee, but to do justly, and to love mercy, and to walk humbly with thy God?"}},
+"nahum":{"1":{"7":"The LORD is good, a strong hold in the day of trouble; and he knoweth them that trust in him."}},
+"habakkuk":{"3":{"17":"Although the fig tree shall not blossom, neither shall fruit be in the vines; the labour of the olive shall fail, and the fields shall yield no meat; the flock shall be cut off from the fold, and there shall be no herd in the stalls:","18":"Yet I will rejoice in the LORD, I will joy in the God of my salvation.","19":"The LORD God is my strength, and he will make my feet like hinds' feet, and he will make me to walk upon mine high places."}},
+"zephaniah":{"3":{"17":"The LORD thy God in the midst of thee is mighty; he will save, he will rejoice over thee with joy; he will rest in his love, he will joy over thee with singing."}},
+"zechariah":{"4":{"6":"Then he answered and spake unto me, saying, This is the word of the LORD unto Zerubbabel, saying, Not by might, nor by power, but by my spirit, saith the LORD of hosts."}},
+"malachi":{"3":{"10":"Bring ye all the tithes into the storehouse, that there may be meat in mine house, and prove me now herewith, saith the LORD of hosts, if I will not open you the windows of heaven, and pour you out a blessing, that there shall not be room enough to receive it."}},
+"matthew":{"5":{"16":"Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven."},"6":{"33":"But seek ye first the kingdom of God, and his righteousness; and all these things shall be added unto you."},"11":{"28":"Come unto me, all ye that labour and are heavy laden, and I will give you rest.","29":"Take my yoke upon you, and learn of me; for I am meek and lowly in heart: and ye shall find rest unto your souls.","30":"For my yoke is easy, and my burden is light."},"17":{"20":"And Jesus said unto them, Because of your unbelief: for verily I say unto you, If ye have faith as a grain of mustard seed, ye shall say unto this mountain, Remove hence to yonder place; and it shall remove; and nothing shall be impossible unto you."},"19":{"26":"But Jesus beheld them, and said unto them, With men this is impossible; but with God all things are possible."},"22":{"37":"Jesus said unto him, Thou shalt love the Lord thy God with all thy heart, and with all thy soul, and with all thy mind.","38":"This is the first and great commandment.","39":"And the second is like unto it, Thou shalt love thy neighbour as thyself."},"28":{"19":"Go ye therefore, and teach all nations, baptizing them in the name of the Father, and of the Son, and of the Holy Ghost:","20":"Teaching them to observe all things whatsoever I have commanded you: and, lo, I am with you alway, even unto the end of the world. Amen."}},
+"mark":{"9":{"23":"Jesus said unto him, If thou canst believe, all things are possible to him that believeth."},"10":{"27":"And Jesus looking upon them saith, With men it is impossible, but not with God: for with God all things are possible."},"11":{"24":"Therefore I say unto you, What things soever ye desire, when ye pray, believe that ye receive them, and ye shall have them."},"12":{"30":"And thou shalt love the Lord thy God with all thy heart, and with all thy soul, and with all thy mind, and with all thy strength: this is the first commandment.","31":"And the second is like, namely this, Thou shalt love thy neighbour as thyself. There is none other commandment greater than these."},"16":{"15":"And he said unto them, Go ye into all the world, and preach the gospel to every creature."}},
+"luke":{"1":{"37":"For with God nothing shall be impossible."},"6":{"31":"And as ye would that men should do to you, do ye also to them likewise."},"11":{"9":"And I say unto you, Ask, and it shall be given you; seek, and ye shall find; knock, and it shall be opened unto you.","10":"For every one that asketh receiveth; and he that seeketh findeth; and to him that knocketh it shall be opened."},"12":{"34":"For where your treasure is, there will your heart be also."}},
+"john":{"1":{"1":"In the beginning was the Word, and the Word was with God, and the Word was God."},"3":{"16":"For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.","17":"For God sent not his Son into the world to condemn the world; but that the world through him might be saved."},"8":{"12":"Then spake Jesus again unto them, saying, I am the light of the world: he that followeth me shall not walk in darkness, but shall have the light of life."},"10":{"10":"The thief cometh not, but for to steal, and to kill, and to destroy: I am come that they might have life, and that they might have it more abundantly."},"11":{"25":"Jesus said unto her, I am the resurrection, and the life: he that believeth in me, though he were dead, yet shall he live:"},"14":{"1":"Let not your heart be troubled: ye believe in God, believe also in me.","6":"Jesus saith unto him, I am the way, the truth, and the life: no man cometh unto the Father, but by me.","27":"Peace I leave with you, my peace I give unto you: not as the world giveth, give I unto you. Let not your heart be troubled, neither let it be afraid."},"15":{"5":"I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing.","13":"Greater love hath no man than this, that a man lay down his life for his friends."},"16":{"33":"These things I have spoken unto you, that in me ye might have peace. In the world ye shall have tribulation: but be of good cheer; I have overcome the world."}},
+"acts":{"1":{"8":"But ye shall receive power, after that the Holy Ghost is come upon you: and ye shall be witnesses unto me both in Jerusalem, and in all Judaea, and in Samaria, and unto the uttermost part of the earth."},"2":{"38":"Then Peter said unto them, Repent, and be baptized every one of you in the name of Jesus Christ for the remission of sins, and ye shall receive the gift of the Holy Ghost."},"4":{"12":"Neither is there salvation in any other: for there is none other name under heaven given among men, whereby we must be saved."},"16":{"31":"And they said, Believe on the Lord Jesus Christ, and thou shalt be saved, and thy house."}},
+"romans":{"3":{"23":"For all have sinned, and come short of the glory of God;"},"5":{"8":"But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us."},"6":{"23":"For the wages of sin is death; but the gift of God is eternal life through Jesus Christ our Lord."},"8":{"1":"There is therefore now no condemnation to them which are in Christ Jesus, who walk not after the flesh, but after the Spirit.","28":"And we know that all things work together for good to them that love God, to them who are the called according to his purpose.","38":"For I am persuaded, that neither death, nor life, nor angels, nor principalities, nor powers, nor things present, nor things to come,","39":"Nor height, nor depth, nor any other creature, shall be able to separate us from the love of God, which is in Christ Jesus our Lord."},"10":{"9":"That if thou shalt confess with thy mouth the Lord Jesus, and shalt believe in thine heart that God hath raised him from the dead, thou shalt be saved."},"12":{"2":"And be not conformed to this world: but be ye transformed by the renewing of your mind, that ye may prove what is that good, and acceptable, and perfect, will of God.","12":"Rejoicing in hope; patient in tribulation; continuing instant in prayer;"},"15":{"13":"Now the God of hope fill you with all joy and peace in believing, that ye may abound in hope, through the power of the Holy Ghost."}},
+"1 corinthians":{"2":{"9":"But as it is written, Eye hath not seen, nor ear heard, neither have entered into the heart of man, the things which God hath prepared for them that love him."},"6":{"19":"What? know ye not that your body is the temple of the Holy Ghost which is in you, which ye have of God, and ye are not your own?","20":"For ye are bought with a price: therefore glorify God in your body, and in thy spirit, which are God's."},"10":{"13":"There hath no temptation taken you but such as is common to man: but God is faithful, who will not suffer you to be tempted above that ye are able; but will with the temptation also make a way to escape, that ye may be able to bear it."},"13":{"4":"Charity suffereth long, and is kind; charity envieth not; charity vaunteth not itself, is not puffed up,","5":"Doth not behave itself unseemly, seeketh not her own, is not easily provoked, thinketh no evil;","6":"Rejoiceth not in iniquity, but rejoiceth in the truth;","7":"Beareth all things, believeth all things, hopeth all things, endureth all things.","8":"Charity never faileth: but whether there be prophecies, they shall fail; whether there be tongues, they shall cease; whether there be knowledge, it shall vanish away."}},
+"2 corinthians":{"3":{"17":"Now the Lord is that Spirit: and where the Spirit of the Lord is, there is liberty."},"4":{"16":"For which cause we faint not; but though our outward man perish, yet our inward man is renewed day by day.","17":"For our light affliction, which is but for a moment, worketh for us a far more exceeding and eternal weight of glory;","18":"While we look not at the things which are seen, but at the things which are not seen: for the things which are seen are temporal; but the things which are not seen are eternal."},"5":{"7":"(For we walk by faith, not by sight:)","17":"Therefore if any man be in Christ, he is a new creature: old things are passed away; behold, all things are become new."},"12":{"9":"And he said unto me, My grace is sufficient for thee: for my strength is made perfect in weakness. Most gladly therefore will I rather glory in my infirmities, that the power of Christ may rest upon me."}},
+"galatians":{"2":{"20":"I am crucified with Christ: nevertheless I live; yet not I, but Christ liveth in me: and the life which I now live in the flesh I live by the faith of the Son of God, who loved me, and gave himself for me."},"5":{"1":"Stand fast therefore in the liberty wherewith Christ hath made us free, and be not entangled again with the yoke of bondage.","22":"But the fruit of the Spirit is love, joy, peace, longsuffering, gentleness, goodness, faith,","23":"Meekness, temperance: against such there is no law."},"6":{"9":"And let us not be weary in well doing: for in due season we shall reap, if we faint not."}},
+"ephesians":{"2":{"8":"For by grace are ye saved through faith; and that not of yourselves: it is the gift of God:","9":"Not of works, lest any man should boast."},"3":{"20":"Now unto him that is able to do exceeding abundantly above all that we ask or think, according to the power that worketh in us,"},"4":{"2":"With all lowliness and meekness, with longsuffering, forbearing one another in love;","32":"And be ye kind one to another, tenderhearted, forgiving one another, even as God for Christ's sake hath forgiven you."},"6":{"10":"Finally, my brethren, be strong in the Lord, and in the power of his might.","11":"Put on the whole armour of God, that ye may be able to stand against the wiles of the devil."}},
+"philippians":{"1":{"6":"Being confident of this very thing, that he which hath begun a good work in you will perform it until the day of Jesus Christ:"},"3":{"13":"Brethren, I count not myself to have apprehended: but this one thing I do, forgetting those things which are behind, and reaching forth unto those things which are before,","14":"I press toward the mark for the prize of the high calling of God in Christ Jesus."},"4":{"6":"Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God.","7":"And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.","8":"Finally, brethren, whatsoever things are true, whatsoever things are honest, whatsoever things are just, whatsoever things are pure, whatsoever things are lovely, whatsoever things are of good report; if there be any virtue, and if there be any praise, think on these things.","13":"I can do all things through Christ which strengtheneth me.","19":"But my God shall supply all your need according to his riches in glory by Christ Jesus."}},
+"colossians":{"3":{"2":"Set your affection on things above, not on things on the earth.","12":"Put on therefore, as the elect of God, holy and beloved, bowels of mercies, kindness, humbleness of mind, meekness, longsuffering;","13":"Forbearing one another, and forgiving one another, if any man have a quarrel against any: even as Christ forgave you, so also do ye.","14":"And above all these things put on charity, which is the bond of perfectness.","23":"And whatsoever ye do, do it heartily, as to the Lord, and not unto men;"}},
+"1 thessalonians":{"5":{"16":"Rejoice evermore.","17":"Pray without ceasing.","18":"In every thing give thanks: for this is the will of God in Christ Jesus concerning you."}},
+"2 thessalonians":{"3":{"13":"But ye, brethren, be not weary in well doing."}},
+"1 timothy":{"4":{"12":"Let no man despise thy youth; but be thou an example of the believers, in word, in conversation, in charity, in spirit, in faith, in purity."},"6":{"12":"Fight the good fight of faith, lay hold on eternal life, whereunto thou art also called, and hast professed a good profession before many witnesses."}},
+"2 timothy":{"1":{"7":"For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind."},"3":{"16":"All scripture is given by inspiration of God, and is profitable for doctrine, for reproof, for correction, for instruction in righteousness:","17":"That the man of God may be perfect, throughly furnished unto all good works."}},
+"titus":{"2":{"11":"For the grace of God that bringeth salvation hath appeared to all men,","12":"Teaching us that, denying ungodliness and worldly lusts, we should live soberly, righteously, and godly, in this present world;"}},
+"hebrews":{"4":{"12":"For the word of God is quick, and powerful, and sharper than any twoedged sword, piercing even to the dividing asunder of soul and spirit, and of the joints and marrow, and is a discerner of the thoughts and intents of the heart."},"11":{"1":"Now faith is the substance of things hoped for, the evidence of things not seen."},"12":{"1":"Wherefore seeing we also are compassed about with so great a cloud of witnesses, let us lay aside every weight, and the sin which doth so easily beset us, and let us run with patience the race that is set before us,","2":"Looking unto Jesus the author and finisher of our faith; who for the joy that was set before him endured the cross, despising the shame, and is set down at the right hand of the throne of God."},"13":{"5":"Let your conversation be without covetousness; and be content with such things as ye have: for he hath said, I will never leave thee, nor forsake thee.","8":"Jesus Christ the same yesterday, and to day, and for ever."}},
+"james":{"1":{"2":"My brethren, count it all joy when ye fall into divers temptations;","3":"Knowing this, that the trying of your faith worketh patience.","4":"But let patience have her perfect work, that ye may be perfect and entire, wanting nothing.","5":"If any of you lack wisdom, let him ask of God, that giveth to all men liberally, and upbraideth not; and it shall be given him.","12":"Blessed is the man that endureth temptation: for when he is tried, he shall receive the crown of life, which the Lord hath promised to them that love him."},"4":{"7":"Submit yourselves therefore to God. Resist the devil, and he will flee from you.","8":"Draw nigh to God, and he will draw nigh to you. Cleanse your hands, ye sinners; and purify your hearts, ye double minded."},"5":{"16":"Confess your faults one to another, and pray one for another, that ye may be healed. The effectual fervent prayer of a righteous man availeth much."}},
+"1 peter":{"2":{"9":"But ye are a chosen generation, a royal priesthood, an holy nation, a peculiar people; that ye should shew forth the praises of him who hath called you out of darkness into his marvellous light:"},"3":{"15":"But sanctify the Lord God in your hearts: and be ready always to give an answer to every man that asketh you a reason of the hope that is in you with meekness and fear:"},"5":{"6":"Humble yourselves therefore under the mighty hand of God, that he may exalt you in due time:","7":"Casting all your care upon him; for he careth for you."}},
+"2 peter":{"1":{"3":"According as his divine power hath given unto us all things that pertain unto life and godliness, through the knowledge of him that hath called us to glory and virtue:","4":"Whereby are given unto us exceeding great and precious promises: that by these ye might be partakers of the divine nature, having escaped the corruption that is in the world through lust."},"3":{"9":"The Lord is not slack concerning his promise, as some men count slackness; but is longsuffering to us-ward, not willing that any should perish, but that all should come to repentance."}},
+"1 john":{"1":{"9":"If we confess our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness."},"3":{"1":"Behold, what manner of love the Father hath bestowed upon us, that we should be called the sons of God: therefore the world knoweth us not, because it knew him not."},"4":{"4":"Ye are of God, little children, and have overcome them: because greater is he that is in you, than he that is in the world.","7":"Beloved, let us love one another: for love is of God; and every one that loveth is born of God, and knoweth God.","8":"He that loveth not knoweth not God; for God is love.","18":"There is no fear in love; but perfect love casteth out fear: because fear hath torment. He that feareth is not made perfect in love."},"5":{"14":"And this is the confidence that we have in him, that, if we ask any thing according to his will, he heareth us:"}},
+"jude":{"1":{"20":"But ye, beloved, building up yourselves on your most holy faith, praying in the Holy Ghost,","21":"Keep yourselves in the love of God, looking for the mercy of our Lord Jesus Christ unto eternal life.","24":"Now unto him that is able to keep you from falling, and to present you faultless before the presence of his glory with exceeding joy,","25":"To the only wise God our Saviour, be glory and majesty, dominion and power, both now and ever. Amen."}},
+"revelation":{"1":{"8":"I am Alpha and Omega, the beginning and the ending, saith the Lord, which is, and which was, and which is to come, the Almighty."},"3":{"20":"Behold, I stand at the door, and knock: if any man hear my voice, and open the door, I will come in to him, and will sup with him, and he with me."},"21":{"4":"And God shall wipe away all tears from their eyes; and there shall be no more death, neither sorrow, nor crying, neither shall there be any more pain: for the former things are passed away."},"22":{"13":"I am Alpha and Omega, the beginning and the end, the first and the last."}}
+};
+
+// ==================== BIBLE DATABASE ====================
+class BibleDB {
+  constructor() { this.db = null; this.ready = false; this.cache = new Map(); }
+  async init() {
+    if (!window.indexedDB) { throw new Error('indexedDB not supported in this browser'); }
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('SmartVerseBible_v12', 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('books')) db.createObjectStore('books', {keyPath: 'slug'});
+        if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', {keyPath: 'key'});
+      };
+      req.onsuccess = (e) => { this.db = e.target.result; this.ready = true; resolve(); };
+      req.onerror = () => reject(new Error('IndexedDB open failed'));
+    });
+  }
+  async getBook(slug) {
+    if (this.cache.has(slug)) return this.cache.get(slug);
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('books', 'readonly');
+      const store = tx.objectStore('books');
+      const req = store.get(slug);
+      req.onsuccess = () => { const r = req.result; if (r) this.cache.set(slug, r); resolve(r); };
+      req.onerror = reject;
+    });
+  }
+  async saveBook(slug, name, chapters) {
+    const data = {slug, name, chapters, updated: Date.now()};
+    this.cache.set(slug, data);
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('books', 'readwrite');
+      const store = tx.objectStore('books');
+      const req = store.put(data);
+      req.onsuccess = resolve;
+      req.onerror = reject;
+    });
+  }
+  async getVerse(bookSlug, chapter, verse) {
+    const book = await this.getBook(bookSlug);
+    if (!book) return null;
+    return book.chapters[chapter]?.[verse] || null;
+  }
+  async getChapter(bookSlug, chapter) {
+    const book = await this.getBook(bookSlug);
+    if (!book) return null;
+    return book.chapters[chapter] || null;
+  }
+  async getMeta(key) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('meta', 'readonly');
+      const store = tx.objectStore('meta');
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result?.value);
+      req.onerror = reject;
+    });
+  }
+  async setMeta(key, value) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('meta', 'readwrite');
+      const store = tx.objectStore('meta');
+      const req = store.put({key, value});
+      req.onsuccess = resolve;
+      req.onerror = reject;
+    });
+  }
+  async isComplete() { const meta = await this.getMeta('downloadComplete'); return meta === true; }
+  async clearAll() {
+    this.cache.clear();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('books', 'readwrite');
+      const store = tx.objectStore('books');
+      const req = store.clear();
+      req.onsuccess = resolve;
+      req.onerror = reject;
+    });
+  }
+}
+
+class BibleDownloader {
+  constructor(bibleDB, onProgress) {
+    this.db = bibleDB;
+    this.onProgress = onProgress;
+    this.cancelled = false;
+    this.books = [
+      {n:'Genesis',slug:'genesis',ch:50},{n:'Exodus',slug:'exodus',ch:40},{n:'Leviticus',slug:'leviticus',ch:27},
+      {n:'Numbers',slug:'numbers',ch:36},{n:'Deuteronomy',slug:'deuteronomy',ch:34},{n:'Joshua',slug:'joshua',ch:24},
+      {n:'Judges',slug:'judges',ch:21},{n:'Ruth',slug:'ruth',ch:4},{n:'1 Samuel',slug:'1samuel',ch:31},
+      {n:'2 Samuel',slug:'2samuel',ch:24},{n:'1 Kings',slug:'1kings',ch:22},{n:'2 Kings',slug:'2kings',ch:25},
+      {n:'1 Chronicles',slug:'1chronicles',ch:29},{n:'2 Chronicles',slug:'2chronicles',ch:36},{n:'Ezra',slug:'ezra',ch:10},
+      {n:'Nehemiah',slug:'nehemiah',ch:13},{n:'Esther',slug:'esther',ch:10},{n:'Job',slug:'job',ch:42},
+      {n:'Psalms',slug:'psalms',ch:150},{n:'Proverbs',slug:'proverbs',ch:31},{n:'Ecclesiastes',slug:'ecclesiastes',ch:12},
+      {n:'Song of Solomon',slug:'songofsolomon',ch:8},{n:'Isaiah',slug:'isaiah',ch:66},{n:'Jeremiah',slug:'jeremiah',ch:52},
+      {n:'Lamentations',slug:'lamentations',ch:5},{n:'Ezekiel',slug:'ezekiel',ch:48},{n:'Daniel',slug:'daniel',ch:12},
+      {n:'Hosea',slug:'hosea',ch:14},{n:'Joel',slug:'joel',ch:3},{n:'Amos',slug:'amos',ch:9},
+      {n:'Obadiah',slug:'obadiah',ch:1},{n:'Jonah',slug:'jonah',ch:4},{n:'Micah',slug:'micah',ch:7},
+      {n:'Nahum',slug:'nahum',ch:3},{n:'Habakkuk',slug:'habakkuk',ch:3},{n:'Zephaniah',slug:'zephaniah',ch:3},
+      {n:'Haggai',slug:'haggai',ch:2},{n:'Zechariah',slug:'zechariah',ch:14},{n:'Malachi',slug:'malachi',ch:4},
+      {n:'Matthew',slug:'matthew',ch:28},{n:'Mark',slug:'mark',ch:16},{n:'Luke',slug:'luke',ch:24},
+      {n:'John',slug:'john',ch:21},{n:'Acts',slug:'acts',ch:28},{n:'Romans',slug:'romans',ch:16},
+      {n:'1 Corinthians',slug:'1corinthians',ch:16},{n:'2 Corinthians',slug:'2corinthians',ch:13},{n:'Galatians',slug:'galatians',ch:6},
+      {n:'Ephesians',slug:'ephesians',ch:6},{n:'Philippians',slug:'philippians',ch:4},{n:'Colossians',slug:'colossians',ch:4},
+      {n:'1 Thessalonians',slug:'1thessalonians',ch:5},{n:'2 Thessalonians',slug:'2thessalonians',ch:3},{n:'1 Timothy',slug:'1timothy',ch:6},
+      {n:'2 Timothy',slug:'2timothy',ch:4},{n:'Titus',slug:'titus',ch:3},{n:'Philemon',slug:'philemon',ch:1},
+      {n:'Hebrews',slug:'hebrews',ch:13},{n:'James',slug:'james',ch:5},{n:'1 Peter',slug:'1peter',ch:5},
+      {n:'2 Peter',slug:'2peter',ch:3},{n:'1 John',slug:'1john',ch:5},{n:'2 John',slug:'2john',ch:1},
+      {n:'3 John',slug:'3john',ch:1},{n:'Jude',slug:'jude',ch:1},{n:'Revelation',slug:'revelation',ch:22}
+    ];
+  }
+  async downloadAll() {
+    this.cancelled = false;
+    let completed = 0;
+    const total = this.books.reduce((a,b) => a + b.ch, 0);
+    for (const book of this.books) {
+      if (this.cancelled) break;
+      const chapters = {};
+      for (let ch = 1; ch <= book.ch; ch++) {
+        if (this.cancelled) break;
+        try {
+          const verses = await this.fetchChapter(book.slug, ch);
+          chapters[ch] = verses;
+          completed++;
+          this.onProgress({completed, total, book: book.n, chapter: ch, percent: Math.round((completed/total)*100)});
+        } catch (e) {
+          console.error('Failed ' + book.slug + ' ' + ch, e);
+          try {
+            const verses = await this.fetchChapter(book.slug, ch);
+            chapters[ch] = verses;
+            completed++;
+            this.onProgress({completed, total, book: book.n, chapter: ch, percent: Math.round((completed/total)*100)});
+          } catch (e2) { console.error('Retry failed', e2); }
+        }
+        await new Promise(r => setTimeout(r, 80));
+      }
+      await this.db.saveBook(book.slug, book.n, chapters);
+    }
+    if (!this.cancelled) {
+      await this.db.setMeta('downloadComplete', true);
+      await this.db.setMeta('downloadedCount', completed);
+    }
+    return !this.cancelled;
+  }
+  async fetchChapter(slug, chapter) {
+    const url = 'https://cdn.jsdelivr.net/gh/wldeh/bible-api/bibles/en-kjv/books/' + slug + '/chapters/' + chapter + '.json';
+    const r = await fetch(url, {method: 'GET', mode: 'cors'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const json = await r.json();
+    const data = Array.isArray(json) ? json : (json.data || []);
+    const verses = {};
+    if (Array.isArray(data)) { for (const v of data) { if(v.verse != null) verses[v.verse] = v.text; } }
+    return verses;
+  }
+  cancel() { this.cancelled = true; }
+}
+
+class SemanticSearcher {
+  constructor(bibleDB) {
+    this.db = bibleDB;
+    this.phraseIndex = new Map();
+    this.initialized = false;
+    this.minWords = 5;
+    this.threshold = 0.65;
+  }
+  normalize(text) {
+    return text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  async buildIndex() {
+    this.phraseIndex.clear();
+    const books = [
+      {slug:'genesis',n:'Genesis'},{slug:'exodus',n:'Exodus'},{slug:'leviticus',n:'Leviticus'},
+      {slug:'numbers',n:'Numbers'},{slug:'deuteronomy',n:'Deuteronomy'},{slug:'joshua',n:'Joshua'},
+      {slug:'judges',n:'Judges'},{slug:'ruth',n:'Ruth'},{slug:'1samuel',n:'1 Samuel'},
+      {slug:'2samuel',n:'2 Samuel'},{slug:'1kings',n:'1 Kings'},{slug:'2kings',n:'2 Kings'},
+      {slug:'1chronicles',n:'1 Chronicles'},{slug:'2chronicles',n:'2 Chronicles'},{slug:'ezra',n:'Ezra'},
+      {slug:'nehemiah',n:'Nehemiah'},{slug:'esther',n:'Esther'},{slug:'job',n:'Job'},
+      {slug:'psalms',n:'Psalms'},{slug:'proverbs',n:'Proverbs'},{slug:'ecclesiastes',n:'Ecclesiastes'},
+      {slug:'songofsolomon',n:'Song of Solomon'},{slug:'isaiah',n:'Isaiah'},{slug:'jeremiah',n:'Jeremiah'},
+      {slug:'lamentations',n:'Lamentations'},{slug:'ezekiel',n:'Ezekiel'},{slug:'daniel',n:'Daniel'},
+      {slug:'hosea',n:'Hosea'},{slug:'joel',n:'Joel'},{slug:'amos',n:'Amos'},
+      {slug:'obadiah',n:'Obadiah'},{slug:'jonah',n:'Jonah'},{slug:'micah',n:'Micah'},
+      {slug:'nahum',n:'Nahum'},{slug:'habakkuk',n:'Habakkuk'},{slug:'zephaniah',n:'Zephaniah'},
+      {slug:'haggai',n:'Haggai'},{slug:'zechariah',n:'Zechariah'},{slug:'malachi',n:'Malachi'},
+      {slug:'matthew',n:'Matthew'},{slug:'mark',n:'Mark'},{slug:'luke',n:'Luke'},
+      {slug:'john',n:'John'},{slug:'acts',n:'Acts'},{slug:'romans',n:'Romans'},
+      {slug:'1corinthians',n:'1 Corinthians'},{slug:'2corinthians',n:'2 Corinthians'},{slug:'galatians',n:'Galatians'},
+      {slug:'ephesians',n:'Ephesians'},{slug:'philippians',n:'Philippians'},{slug:'colossians',n:'Colossians'},
+      {slug:'1thessalonians',n:'1 Thessalonians'},{slug:'2thessalonians',n:'2 Thessalonians'},{slug:'1timothy',n:'1 Timothy'},
+      {slug:'2timothy',n:'2 Timothy'},{slug:'titus',n:'Titus'},{slug:'philemon',n:'Philemon'},
+      {slug:'hebrews',n:'Hebrews'},{slug:'james',n:'James'},{slug:'1peter',n:'1 Peter'},
+      {slug:'2peter',n:'2 Peter'},{slug:'1john',n:'1 John'},{slug:'2john',n:'2 John'},
+      {slug:'3john',n:'3 John'},{slug:'jude',n:'Jude'},{slug:'revelation',n:'Revelation'}
+    ];
+    for (const book of books) {
+      const data = await this.db.getBook(book.slug);
+      if (!data) continue;
+      for (const [chNum, verses] of Object.entries(data.chapters)) {
+        for (const [vNum, text] of Object.entries(verses)) {
+          const normalized = this.normalize(text);
+          const words = normalized.split(/\s+/).filter(w => w.length > 2);
+          if (words.length >= this.minWords) {
+            const key = words.slice(0, 8).join(' ');
+            this.phraseIndex.set(key, {book: book.n, chapter: parseInt(chNum), verse: parseInt(vNum), text});
+            if (words.length > 10) {
+              const key2 = words.slice(0, 12).join(' ');
+              this.phraseIndex.set(key2, {book: book.n, chapter: parseInt(chNum), verse: parseInt(vNum), text});
+            }
+          }
+        }
+      }
+    }
+    this.initialized = true;
+  }
+  async searchQuote(quote) {
+    const normalized = this.normalize(quote);
+    const quoteWords = normalized.split(/\s+/).filter(w => w.length > 2);
+    if (quoteWords.length < this.minWords) return null;
+    if (!this.initialized) await this.buildIndex();
+    let bestMatch = null;
+    let bestScore = 0;
+    for (const [phrase, ref] of this.phraseIndex) {
+      const phraseWords = phrase.split(' ');
+      const overlap = this.countOverlap(quoteWords, phraseWords);
+      const score = overlap / Math.max(quoteWords.length, phraseWords.length * 0.8);
+      if (score > bestScore && score > this.threshold) {
+        bestScore = score;
+        bestMatch = {...ref, score};
+      }
+    }
+    return bestMatch;
+  }
+  countOverlap(a, b) { const setB = new Set(b); return a.filter(w => setB.has(w)).length; }
+}
+
+// ==================== MAIN APP ====================
+const App = (function(){
+  'use strict';
+
+  const BIBLE_API_PRIMARY = 'https://bible-api.com';
+  const VERSION_MAP = {kjv:'kjv', niv:'niv', esv:'esv', nasb:'nasb', nlt:'nlt', asv:'asv', web:'web', bbe:'bbe'};
+
+  const BOOKS = [
+    {n:'Genesis',a:'gen',ch:50,slug:'genesis'},{n:'Exodus',a:'exo',ch:40,slug:'exodus'},{n:'Leviticus',a:'lev',ch:27,slug:'leviticus'},
+    {n:'Numbers',a:'num',ch:36,slug:'numbers'},{n:'Deuteronomy',a:'deu',ch:34,slug:'deuteronomy'},{n:'Joshua',a:'jos',ch:24,slug:'joshua'},
+    {n:'Judges',a:'jdg',ch:21,slug:'judges'},{n:'Ruth',a:'rut',ch:4,slug:'ruth'},{n:'1 Samuel',a:'1sa',ch:31,slug:'1samuel'},
+    {n:'2 Samuel',a:'2sa',ch:24,slug:'2samuel'},{n:'1 Kings',a:'1ki',ch:22,slug:'1kings'},{n:'2 Kings',a:'2ki',ch:25,slug:'2kings'},
+    {n:'1 Chronicles',a:'1ch',ch:29,slug:'1chronicles'},{n:'2 Chronicles',a:'2ch',ch:36,slug:'2chronicles'},{n:'Ezra',a:'ezr',ch:10,slug:'ezra'},
+    {n:'Nehemiah',a:'neh',ch:13,slug:'nehemiah'},{n:'Esther',a:'est',ch:10,slug:'esther'},{n:'Job',a:'job',ch:42,slug:'job'},
+    {n:'Psalms',a:'psa',ch:150,slug:'psalms'},{n:'Proverbs',a:'pro',ch:31,slug:'proverbs'},{n:'Ecclesiastes',a:'ecc',ch:12,slug:'ecclesiastes'},
+    {n:'Song of Solomon',a:'sng',ch:8,slug:'songofsolomon'},{n:'Isaiah',a:'isa',ch:66,slug:'isaiah'},{n:'Jeremiah',a:'jer',ch:52,slug:'jeremiah'},
+    {n:'Lamentations',a:'lam',ch:5,slug:'lamentations'},{n:'Ezekiel',a:'ezk',ch:48,slug:'ezekiel'},{n:'Daniel',a:'dan',ch:12,slug:'daniel'},
+    {n:'Hosea',a:'hos',ch:14,slug:'hosea'},{n:'Joel',a:'jol',ch:3,slug:'joel'},{n:'Amos',a:'amo',ch:9,slug:'amos'},
+    {n:'Obadiah',a:'oba',ch:1,slug:'obadiah'},{n:'Jonah',a:'jon',ch:4,slug:'jonah'},{n:'Micah',a:'mic',ch:7,slug:'micah'},
+    {n:'Nahum',a:'nah',ch:3,slug:'nahum'},{n:'Habakkuk',a:'hab',ch:3,slug:'habakkuk'},{n:'Zephaniah',a:'zep',ch:3,slug:'zephaniah'},
+    {n:'Haggai',a:'hag',ch:2,slug:'haggai'},{n:'Zechariah',a:'zec',ch:14,slug:'zechariah'},{n:'Malachi',a:'mal',ch:4,slug:'malachi'},
+    {n:'Matthew',a:'mat',ch:28,slug:'matthew'},{n:'Mark',a:'mrk',ch:16,slug:'mark'},{n:'Luke',a:'luk',ch:24,slug:'luke'},
+    {n:'John',a:'jhn',ch:21,slug:'john'},{n:'Acts',a:'act',ch:28,slug:'acts'},{n:'Romans',a:'rom',ch:16,slug:'romans'},
+    {n:'1 Corinthians',a:'1co',ch:16,slug:'1corinthians'},{n:'2 Corinthians',a:'2co',ch:13,slug:'2corinthians'},{n:'Galatians',a:'gal',ch:6,slug:'galatians'},
+    {n:'Ephesians',a:'eph',ch:6,slug:'ephesians'},{n:'Philippians',a:'php',ch:4,slug:'philippians'},{n:'Colossians',a:'col',ch:4,slug:'colossians'},
+    {n:'1 Thessalonians',a:'1th',ch:5,slug:'1thessalonians'},{n:'2 Thessalonians',a:'2th',ch:3,slug:'2thessalonians'},{n:'1 Timothy',a:'1ti',ch:6,slug:'1timothy'},
+    {n:'2 Timothy',a:'2ti',ch:4,slug:'2timothy'},{n:'Titus',a:'tit',ch:3,slug:'titus'},{n:'Philemon',a:'phm',ch:1,slug:'philemon'},
+    {n:'Hebrews',a:'heb',ch:13,slug:'hebrews'},{n:'James',a:'jas',ch:5,slug:'james'},{n:'1 Peter',a:'1pe',ch:5,slug:'1peter'},
+    {n:'2 Peter',a:'2pe',ch:3,slug:'2peter'},{n:'1 John',a:'1jn',ch:5,slug:'1john'},{n:'2 John',a:'2jn',ch:1,slug:'2john'},
+    {n:'3 John',a:'3jn',ch:1,slug:'3john'},{n:'Jude',a:'jud',ch:1,slug:'jude'},{n:'Revelation',a:'rev',ch:22,slug:'revelation'}
+  ];
+
+  const PHONETIC_BOOKS = {
+    'maze':'matthew','matthew':'matthew','math you':'matthew','mat you':'matthew',
+    'mark':'mark','marc':'mark','marque':'mark','mock':'mark',
+    'luke':'luke','look':'luke','loose':'luke',
+    'john':'john','jon':'john','juan':'john','jawn':'john','jean':'john',
+    'acts':'acts','axe':'acts','act':'acts',
+    'romans':'romans','roman':'romans','rome':'romans',
+    'corinthians':'corinthians','corinthian':'corinthians','corinth':'corinthians','korinthians':'corinthians',
+    'galatians':'galatians','galatian':'galatians','gladations':'galatians',
+    'ephesians':'ephesians','ephesian':'ephesians','effusion':'ephesians','effusions':'ephesians','fusions':'ephesians',
+    'philippians':'philippians','philippian':'philippians','philip':'philippians','fillipians':'philippians',
+    'colossians':'colossians','colossian':'colossians','colossus':'colossians',
+    'thessalonians':'thessalonians','thessalonian':'thessalonians','salonians':'thessalonians',
+    'timothy':'timothy','tim':'timothy','thymus':'timothy','time':'timothy',
+    'titus':'titus','tight ass':'titus','tightus':'titus',
+    'philemon':'philemon','file mon':'philemon',
+    'hebrews':'hebrews','hebrew':'hebrews','he brews':'hebrews',
+    'james':'james','jame':'james','jim':'james',
+    'peter':'peter','peater':'peter','pita':'peter',
+    'jude':'jude','jewed':'jude','judy':'jude','jood':'jude',
+    'revelation':'revelation','revelations':'revelation','revolution':'revelation',
+    'genesis':'genesis','gen':'genesis','jenesis':'genesis',
+    'exodus':'exodus','exo':'exodus',
+    'leviticus':'leviticus','lev':'leviticus',
+    'numbers':'numbers','num':'numbers','number':'numbers',
+    'deuteronomy':'deuteronomy','deut':'deuteronomy','duty':'deuteronomy',
+    'joshua':'joshua','josh':'joshua',
+    'judges':'judges','judge':'judges',
+    'ruth':'ruth','root':'ruth',
+    'samuel':'samuel','sam':'samuel','sammy':'samuel',
+    'kings':'kings','king':'kings','kin':'kings',
+    'chronicles':'chronicles','chronicle':'chronicles','cronicles':'chronicles',
+    'ezra':'ezra','esra':'ezra',
+    'nehemiah':'nehemiah','nehemia':'nehemiah',
+    'esther':'esther','ester':'esther','esta':'esther',
+    'job':'job','joe':'job','jobe':'job',
+    'psalms':'psalms','psalm':'psalms','songs':'psalms','song':'psalms','some':'psalms',
+    'proverbs':'proverbs','proverb':'proverbs',
+    'ecclesiastes':'ecclesiastes','ecclesia':'ecclesiastes','eccl':'ecclesiastes',
+    'solomon':'solomon','song of solomon':'song of solomon','song of songs':'song of solomon',
+    'isaiah':'isaiah','isa':'isaiah','isai':'isaiah','izaiah':'isaiah',
+    'jeremiah':'jeremiah','jer':'jeremiah','jeremy':'jeremiah',
+    'lamentations':'lamentations','lament':'lamentations','laments':'lamentations',
+    'ezekiel':'ezekiel','ezek':'ezekiel',
+    'daniel':'daniel','dan':'daniel','danny':'daniel',
+    'hosea':'hosea','hos':'hosea',
+    'joel':'joel','jole':'joel',
+    'amos':'amos','aimos':'amos',
+    'obadiah':'obadiah','oba':'obadiah',
+    'jonah':'jonah','jona':'jonah','jonas':'jonah',
+    'micah':'micah','mica':'micah','mike':'micah',
+    'nahum':'nahum','na hum':'nahum','nayum':'nahum',
+    'habakkuk':'habakkuk','hab':'habakkuk','havoc':'habakkuk',
+    'zephaniah':'zephaniah','zep':'zephaniah','zeph':'zephaniah',
+    'haggai':'haggai','hag':'haggai','hagai':'haggai',
+    'zechariah':'zechariah','zech':'zechariah','zec':'zechariah','zachariah':'zechariah',
+    'malachi':'malachi','mal':'malachi'
+  };
+
+  const NUMBER_WORDS = {
+    'one':'1','two':'2','three':'3','four':'4','five':'5',
+    'six':'6','seven':'7','eight':'8','nine':'9','ten':'10',
+    'eleven':'11','twelve':'12','thirteen':'13','fourteen':'14','fifteen':'15',
+    'sixteen':'16','seventeen':'17','eighteen':'18','nineteen':'19','twenty':'20',
+    'twenty one':'21','twenty two':'22','twenty three':'23','twenty four':'24','twenty five':'25',
+    'twenty six':'26','twenty seven':'27','twenty eight':'28','twenty nine':'29','thirty':'30',
+    'thirty one':'31','thirty two':'32','thirty three':'33','thirty four':'34','thirty five':'35',
+    'thirty six':'36','thirty seven':'37','thirty eight':'38','thirty nine':'39','forty':'40',
+    'forty one':'41','forty two':'42','forty three':'43','forty four':'44','forty five':'45',
+    'forty six':'46','forty seven':'47','forty eight':'48','forty nine':'49','fifty':'50',
+    'fifty one':'51','fifty two':'52','fifty three':'53','fifty four':'54','fifty five':'55',
+    'fifty six':'56','fifty seven':'57','fifty eight':'58','fifty nine':'59','sixty':'60',
+    'sixty one':'61','sixty two':'62','sixty three':'63','sixty four':'64','sixty five':'65',
+    'sixty six':'66','sixty seven':'67','sixty eight':'68','sixty nine':'69','seventy':'70',
+    'seventy one':'71','seventy two':'72','seventy three':'73','seventy four':'74','seventy five':'75',
+    'first':'1','second':'2','third':'3','fourth':'4','fifth':'5',
+    'sixth':'6','seventh':'7','eighth':'8','ninth':'9','tenth':'10',
+    'twenty first':'21','twenty second':'22','twenty third':'23','twenty fourth':'24','twenty fifth':'25',
+    'thirtieth':'30','fortieth':'40','fiftieth':'50','sixtieth':'60','seventieth':'70'
+  };
+
+  const KEYWORDS = {
+    love:'John 3:16', faith:'Hebrews 11:1', peace:'John 14:27',
+    hope:'Romans 15:13', joy:'Psalm 16:11', grace:'Ephesians 2:8',
+    wisdom:'Proverbs 3:5', strength:'Isaiah 41:10', forgive:'Matthew 6:14',
+    salvation:'Romans 10:9', prayer:'Philippians 4:6', holy:'1 Peter 1:16'
+  };
+
+  let state = {
+    listening:false, connected:false, recording:false,
+    currentBook:null, currentChapter:null,
+    mediaStream:null, audioContext:null, analyser:null,
+    mediaRecorder:null, audioChunks:[],
+    dgKey:'', devices:[], selDevice:'default',
+    history:[], recent:[], timer:0, timerInt:null,
+    outputWin:null, apiReady:false,
+    lastTranscript:'', useBrowserSpeech:false,
+    recognition:null, lastDetectTime:0, lastDetectRef:'',
+    restartCounter:0, keepAliveInt:null, pendingRef:null, pendingCount:0,
+    allFinal:'', queue:[], autoDisplay:false,
+    bibleDB:null, bibleDownloader:null, semanticSearcher:null,
+    hasFullBible:false, isDownloading:false,
+    currentVerseRef:null
+  };
+
+  let bc = null;
+  try { bc = new BroadcastChannel('smartverse_v12'); } catch(e) {}
+
+  const $ = id => document.getElementById(id);
+
+  function init(){
+    const isOutput = document.documentElement.classList.contains('output-mode');
+    if(isOutput){ 
+      initOutputReceiver(); 
+      initDelegatedEvents();
+      initSocket();
+      return; 
+    }
+    if(bc){ bc.onmessage = e => { if(e.data) handleBroadcast(e.data); }; }
+    initBibleEngine().catch(err => {
+      console.error('Bible engine init failed:', err);
+      state.bibleDB = null;
+      state.hasFullBible = false;
+    }).then(() => {
+      loadCfg();
+      buildKeywords();
+      initKeyboard();
+      initWaveform();
+      initDelegatedEvents();
+      renderHistory();
+      renderOutputLog();
+      renderQueue();
+      updateStatusDisplays();
+      updateObsUrl();
+      updateBibleStatus();
+      initSocket();
+      toast('SmartVerse v13 ready','ok');
+    });
+  }
+
+  async function initBibleEngine() {
+    state.bibleDB = new BibleDB();
+    await state.bibleDB.init();
+    state.hasFullBible = await state.bibleDB.isComplete();
+    state.semanticSearcher = new SemanticSearcher(state.bibleDB);
+    if (state.hasFullBible) {
+      state.semanticSearcher.buildIndex().catch(e => console.warn('Semantic index build failed:', e));
+    }
+  }
+
+  function updateBibleStatus() {
+    const els = ['bibleStatus', 'bibleStatus2', 'bibleStatus3'];
+    const text = state.hasFullBible ? 'Full Bible (31,102 verses)' : 'Partial Bible (150 verses)';
+    const cls = state.hasFullBible ? 'full' : 'partial';
+    els.forEach(id => {
+      const el = $(id);
+      if (el) { el.textContent = text; el.className = 'bible-status ' + cls; }
+    });
+    const apiEl = $('apiStatus');
+    if (apiEl) {
+      apiEl.textContent = state.hasFullBible ? 'Local Bible Ready' : 'Partial Bible — Download for full coverage';
+      apiEl.className = 'api-pill ' + (state.hasFullBible ? 'ok' : 'warn');
+    }
+  }
+
+  async function downloadFullBible() {
+    if (state.isDownloading) return;
+    if (state.hasFullBible) { toast('Full Bible already downloaded!','ok'); return; }
+    state.isDownloading = true;
+    const btn = $('btnDownload');
+    const cancelBtn = $('btnCancelDownload');
+    const panel = $('downloadPanel');
+    if (btn) btn.style.display = 'none';
+    if (cancelBtn) cancelBtn.style.display = 'block';
+    if (panel) panel.style.display = 'block';
+    state.bibleDownloader = new BibleDownloader(state.bibleDB, (progress) => {
+      const bar = $('downloadBar');
+      const bookEl = $('downloadBook');
+      const pctEl = $('downloadPercent');
+      if (bar) bar.style.width = progress.percent + '%';
+      if (bookEl) bookEl.textContent = progress.book + ' ' + progress.chapter;
+      if (pctEl) pctEl.textContent = progress.percent + '%';
+    });
+    try {
+      const success = await state.bibleDownloader.downloadAll();
+      if (success) {
+        state.hasFullBible = true;
+        toast('Full Bible downloaded!','ok');
+        state.semanticSearcher.buildIndex().catch(e => console.warn(e));
+        const testText = await state.bibleDB.getVerse('john', 14, 27);
+        if (!testText) toast('WARNING: Downloaded data appears empty. Click Reset Bible Data and try again.','bad');
+      } else { toast('Download cancelled.','warn'); }
+    } catch (e) { toast('Download failed: ' + e.message, 'bad'); }
+    finally {
+      state.isDownloading = false;
+      if (btn) btn.style.display = 'block';
+      if (cancelBtn) cancelBtn.style.display = 'none';
+      updateBibleStatus();
+    }
+  }
+
+  function cancelDownload() { if (state.bibleDownloader) state.bibleDownloader.cancel(); }
+
+  async function clearBibleDB() {
+    if (!state.bibleDB) return;
+    if (!confirm('This will erase all downloaded Bible data. You will need to re-download. Continue?')) return;
+    try {
+      await state.bibleDB.clearAll();
+      await state.bibleDB.setMeta('downloadComplete', false);
+      await state.bibleDB.setMeta('downloadedCount', 0);
+      state.hasFullBible = false;
+      state.semanticSearcher.initialized = false;
+      state.semanticSearcher.phraseIndex.clear();
+      updateBibleStatus();
+      toast('Bible database cleared.','ok');
+    } catch (e) { toast('Failed to clear database: ' + e.message, 'bad'); }
+  }
+
+  function updateObsUrl(){
+    try{
+      const url = new URL(location.href);
+      url.search = '?view=output';
+      const inp = $('obsUrlInput');
+      if(inp) inp.value = url.toString();
+    }catch(e){
+      const fallback = location.href.split('?')[0].split('#')[0] + '?view=output';
+      const inp = $('obsUrlInput');
+      if(inp) inp.value = fallback;
+    }
+  }
+
+  function copyObsUrl(){
+    const inp = $('obsUrlInput');
+    if(!inp) return;
+    navigator.clipboard.writeText(inp.value)
+      .then(() => toast('OBS URL copied!','ok'))
+      .catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = inp.value;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        toast('OBS URL copied!','ok');
+      });
+  }
+
+  function testObsOutput() {
+    broadcast({
+      type:'verse', ref:'Test Output • KJV', text:'This is a test verse to verify your output is working correctly.',
+      theme:document.documentElement.getAttribute('data-theme')||'dark',
+      mode:getModeClass(), _ts:Date.now()
+    });
+    toast('Test verse sent to output!','ok');
+  }
+
+  function updateStatusDisplays(){
+    const mic2 = $('micStatus2');
+    if(mic2){ mic2.textContent = state.connected ? 'Connected' : 'Disconnected'; mic2.style.color = state.connected ? 'var(--success)' : 'var(--text-faint)'; }
+    const modeMap = {center:'Center Stage',lower:'Lower Third',full:'Full Screen',pip:'PiP',obs:'OBS Overlay'};
+    const modeEl = $('modeStatus');
+    if(modeEl) modeEl.textContent = modeMap[getModeClass()] || 'Center Stage';
+    const eng = $('engineStatus');
+    const ubs = $('useBrowserSpeech');
+    if(eng) eng.textContent = (ubs && ubs.checked) ? 'Browser Speech (Live)' : 'Deepgram (Batch)';
+    const rc = $('restartCount');
+    if(rc) rc.textContent = state.restartCounter;
+    const qc = $('queueCount');
+    if(qc) qc.textContent = state.queue.length;
+  }
+
+  async function fetchVerse(ref, version){
+    const v = VERSION_MAP[version] || 'kjv';
+    const parsed = parseReference(ref);
+    if(!parsed || !parsed.book){
+      const key = ref.toLowerCase().trim();
+      if(EMERGENCY_BIBLE[key]) return {ref:EMERGENCY_BIBLE[key].ref, text:EMERGENCY_BIBLE[key].text, version:'KJV'};
+      throw new Error('Could not parse: '+ref);
+    }
+    const bk = BOOKS.find(b=>b.n.toLowerCase()===parsed.book.toLowerCase());
+    if(!bk) throw new Error('Unknown book: '+parsed.book);
+    if (v === 'kjv') {
+      const localText = await localLookup(bk.slug, parsed.chapter, parsed.verse, parsed.endVerse);
+      if (localText) {
+        const refStr = parsed.endVerse ? bk.n + ' ' + parsed.chapter + ':' + parsed.verse + '-' + parsed.endVerse : (parsed.verse ? bk.n + ' ' + parsed.chapter + ':' + parsed.verse : bk.n + ' ' + parsed.chapter);
+        return {ref: refStr, text: localText, version: 'KJV (Local)'};
+      }
+    }
+    const primaryUrl = BIBLE_API_PRIMARY + '/' + encodeURIComponent(parsed.ref) + '?translation=' + v;
+    try{
+      const r = await fetch(primaryUrl, {method:'GET',mode:'cors'});
+      if(r.ok){
+        const d = await r.json();
+        if(d.verses && d.verses.length>0){
+          const text = d.verses.map(v=>v.text).join(' ').replace(/\s+/g,' ').trim();
+          return {ref:d.reference, text, version:d.translation_name||v.toUpperCase()};
+        }
+        if(d.text) return {ref:d.reference, text:d.text, version:d.translation_name||v.toUpperCase()};
+      }
+    }catch(e){}
+    throw new Error('All sources failed for: '+ref);
+  }
+
+  async function localLookup(slug, chapter, verse, endVerse) {
+    if (!slug || !chapter) return null;
+    if (state.bibleDB && state.bibleDB.ready) {
+      if (verse) {
+        if (endVerse) {
+          const verses = [];
+          for (let v = verse; v <= endVerse; v++) {
+            const text = await state.bibleDB.getVerse(slug, chapter, v);
+            if (text) verses.push(text);
+          }
+          if (verses.length) return verses.join(' ');
+        } else {
+          const text = await state.bibleDB.getVerse(slug, chapter, verse);
+          if (text) return text;
+        }
+      } else {
+        const chData = await state.bibleDB.getChapter(slug, chapter);
+        if (chData) { const verses = Object.values(chData); if (verses.length) return verses.join(' '); }
+      }
+    }
+    const book = EMERGENCY_BIBLE[slug];
+    if (!book) return null;
+    const ch = book[chapter];
+    if (!ch) return null;
+    if (verse) {
+      if (endVerse) {
+        const verses = [];
+        for (let v = verse; v <= endVerse; v++) { if (ch[v]) verses.push(ch[v]); }
+        return verses.length ? verses.join(' ') : null;
+      }
+      return ch[verse] || null;
+    }
+    return Object.values(ch).join(' ') || null;
+  }
+
+  function parseReference(text){
+    if(!text || typeof text !== 'string') return null;
+    let t = text.toLowerCase().trim();
+    const nwEntries = Object.entries(NUMBER_WORDS).sort((a,b)=>b[0].length-a[0].length);
+    for(const [w,n] of nwEntries){ t = t.replace(new RegExp('\b'+w.replace(/ /g,'\s+')+'\b','g'), n); }
+    const pKeys = Object.keys(PHONETIC_BOOKS).sort((a,b)=>b.length-a.length);
+    for(const k of pKeys){ t = t.replace(new RegExp('\b'+k.replace(/ /g,'\s+')+'\b','g'), PHONETIC_BOOKS[k]); }
+    const segments = t.split(/(?:,|\.|\band\b|\bthen\b|\bnext\b)/).map(s=>s.trim()).filter(s=>s.length>0);
+    let lastMatch = null;
+    for(const segment of segments){ const match = tryParseSegment(segment); if(match) lastMatch = match; }
+    if(!lastMatch) lastMatch = tryParseSegment(t);
+    return lastMatch;
+  }
+
+  function tryParseSegment(t){
+    const txt = t.toLowerCase().trim();
+    // Pattern 1: Book Chapter:Verse[-EndVerse] (colon or dot)
+    let m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)\s*[.:]\s*(\d+)(?:\s*[-–]\s*(\d+))?/i);
+    if(m){
+      const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = parseInt(m[3]); const endVerse = m[4] ? parseInt(m[4]) : null;
+      const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
+      if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
+    }
+    // Pattern 2: Book Chapter colon Verse (spoken "colon")
+    m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)\s+colon\s+(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
+    if(m){
+      const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = parseInt(m[3]); const endVerse = m[4] ? parseInt(m[4]) : null;
+      const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
+      if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
+    }
+    // Pattern 3: "Book chapter X verse Y" or "Book X Y" or "Book X verse Y"
+    m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(?:chapter\s*)?(\d+)\s*(?:verse[s]?\s*)?(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
+    if(m){
+      const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = m[3] ? parseInt(m[3]) : null; const endVerse = m[4] ? parseInt(m[4]) : null;
+      const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
+      if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(verse){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; } return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
+    }
+    // Pattern 4: Current book + chapter + verse (when book already known from previous detection)
+    if(state.currentBook){
+      m = txt.match(/(?:chapter\s*)?(\d+)\s*(?:verse[s]?\s*)?(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
+      if(m){
+        const chapter = parseInt(m[1]); const verse = m[2] ? parseInt(m[2]) : null; const endVerse = m[3] ? parseInt(m[3]) : null;
+        const bk = BOOKS.find(b=>b.n.toLowerCase()===state.currentBook.toLowerCase());
+        if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(verse){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; } return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
+      }
+    }
+    // Pattern 5: Current book & chapter + verse only (e.g. "verse 16" or "verses 16 to 18")
+    if(state.currentBook && state.currentChapter){
+      m = txt.match(/(?:verse[s]?\s*)(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
+      if(m){
+        const verse = parseInt(m[1]); const endVerse = m[2] ? parseInt(m[2]) : null;
+        const bk = BOOKS.find(b=>b.n.toLowerCase()===state.currentBook.toLowerCase());
+        if(bk){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:state.currentChapter, verse, endVerse, ref:bk.n+' '+state.currentChapter+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:state.currentChapter, verse, ref:bk.n+' '+state.currentChapter+':'+verse}; }
+      }
+    }
+    // Pattern 6: Book + chapter only (no verse) → default to verse 1
+    m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)/i);
+    if(m){
+      const book = normalizeBook(m[1]); const chapter = parseInt(m[2]);
+      const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
+      if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
+    }
+    // Pattern 7: Standalone chapter:verse (when current book known)
+    if(state.currentBook){
+      m = txt.match(/^(\d+)\s*[.:]\s*(\d+)(?:\s*[-–]\s*(\d+))?$/i);
+      if(m){
+        const chapter = parseInt(m[1]); const verse = parseInt(m[2]); const endVerse = m[3] ? parseInt(m[3]) : null;
+        const bk = BOOKS.find(b=>b.n.toLowerCase()===state.currentBook.toLowerCase());
+        if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
+      }
+    }
+    // Pattern 8: Standalone verse number (when current book & chapter known)
+    if(state.currentBook && state.currentChapter){
+      m = txt.match(/^(\d+)$/);
+      if(m){
+        const verse = parseInt(m[1]);
+        const bk = BOOKS.find(b=>b.n.toLowerCase()===state.currentBook.toLowerCase());
+        if(bk) return {book:bk.n, chapter:state.currentChapter, verse, ref:bk.n+' '+state.currentChapter+':'+verse};
+      }
+    }
+    for(const k in KEYWORDS){ if(txt.includes(k)) return {ref:KEYWORDS[k]}; }
+    return null;
+  }
+
+  function normalizeBook(str){
+    let s = str.trim().toLowerCase().replace(/\s+/g,' ');
+    s = s.replace(/^first\s+/,'1 ').replace(/^second\s+/,'2 ').replace(/^third\s+/,'3 ');
+    s = s.replace(/^1st\s+/,'1 ').replace(/^2nd\s+/,'2 ').replace(/^3rd\s+/,'3 ');
+    s = s.replace(/^the\s+book\s+of\s+/,'');
+    for(const b of BOOKS){ if(b.n.toLowerCase()===s) return b.n; if(b.a.toLowerCase()===s.replace(/\s/g,'')) return b.n; }
+    for(const b of BOOKS){ if(b.n.toLowerCase().startsWith(s)) return b.n; }
+    return s;
+  }
+
+  async function detectSemanticQuote(text) {
+    if (!state.semanticSearcher) return null;
+    if (!state.hasFullBible && !state.semanticSearcher.initialized) return null;
+    const indicator = $('semanticIndicator');
+    if (indicator) indicator.classList.add('active');
+    try {
+      const match = await state.semanticSearcher.searchQuote(text);
+      if (match) {
+        return {book: match.book, chapter: match.chapter, verse: match.verse, ref: match.book + ' ' + match.chapter + ':' + match.verse, score: match.score};
+      }
+    } catch (e) { console.warn('Semantic search error:', e); }
+    finally { if (indicator) indicator.classList.remove('active'); }
+    return null;
+  }
+
+  function addToQueue(ref, confidence, source){
+    if(state.queue.some(q=>q.ref.toLowerCase()===ref.toLowerCase())) return;
+    state.queue.unshift({ref, confidence, source, time:new Date().toLocaleTimeString(), id:Date.now()});
+    if(state.queue.length>20) state.queue.pop();
+    renderQueue();
+    updateStatusDisplays();
+    const auto = $('autoDisplay');
+    if(auto && auto.checked){ showVerse(ref, true); }
+    else { toast('Detected: '+ref+' (in queue)','ok'); }
+  }
+
+  function renderQueue(){
+    const box = $('queueList');
+    if(!box) return;
+    if(!state.queue.length){ box.innerHTML='<div class="queue-empty">Queue is empty. Start listening to detect verses.</div>'; return; }
+    box.innerHTML = state.queue.map((q,i)=>
+      '<div class="queue-item" data-idx="'+i+'">'+
+      '<div class="q-ref">'+encodeHtml(q.ref)+' <span class="q-confidence">'+q.confidence+'%</span></div>'+
+      '<div class="q-text">'+encodeHtml(q.source)+'</div>'+
+      '<div class="q-time">'+encodeHtml(q.time)+'</div>'+
+      '<div class="q-actions">'+
+      '<button class="btn btn-sm btn-accent" data-action="send">Send to Screen</button>'+
+      '<button class="btn btn-sm btn-ghost" data-action="remove">Remove</button>'+
+      '</div></div>'
+    ).join('');
+  }
+
+  function sendQueueItem(idx){ const item = state.queue[idx]; if(!item) return; showVerse(item.ref, true); }
+  function removeQueueItem(idx){ state.queue.splice(idx,1); renderQueue(); updateStatusDisplays(); }
+  function clearQueue(){ state.queue=[]; renderQueue(); updateStatusDisplays(); toast('Queue cleared','ok'); }
+
+  async function showVerse(ref, fromVoice){
+    const parsed = parseReference(ref);
+    if(!parsed){ if(!fromVoice) toast('Could not parse: '+ref,'bad'); return; }
+    if(parsed.ref && !parsed.book){ await _doShow(parsed.ref, fromVoice); return; }
+    const bk = BOOKS.find(b=>b.n.toLowerCase()===(parsed.book||'').toLowerCase());
+    if(!bk){ if(!fromVoice) toast('Unknown book: '+(parsed.book||ref),'bad'); return; }
+    state.currentBook = bk.n;
+    state.currentChapter = parsed.chapter;
+    let refStr = parsed.ref;
+    if(!parsed.verse && parsed.chapter) refStr = bk.n + ' ' + parsed.chapter + ':1';
+    await _doShow(refStr, fromVoice);
+  }
+
+  async function _doShow(refStr, fromVoice){
+    const loader = $('loader');
+    const card = $('verseCard');
+    const empty = $('emptyState');
+    if(loader) loader.style.display='block';
+    if(card) card.style.display='none';
+    if(empty) empty.style.display='none';
+    try{
+      const version = $('selTrans') ? $('selTrans').value : 'kjv';
+      const data = await fetchVerse(refStr, version);
+      const vRef = $('vRef'), vBody = $('vBody'), vMeta = $('vMeta');
+      if(vRef) vRef.textContent = data.ref + (data.version ? ' • ' + data.version : '');
+      if(vBody) vBody.textContent = data.text || '[No text returned]';
+      if(vMeta) vMeta.textContent = 'SmartVerse Display';
+      if(card) card.style.display='block';
+      addHistory(data.ref, data.text, data.version);
+
+      // Track current verse for prev/next
+      const parsedRef = parseReference(refStr);
+      if(parsedRef && parsedRef.book && parsedRef.chapter && parsedRef.verse){
+        state.currentVerseRef = { book: parsedRef.book, chapter: parsedRef.chapter, verse: parsedRef.verse };
+        console.log('[currentVerseRef] set:', JSON.stringify(state.currentVerseRef));
+      }
+
+      broadcast({ type:'verse', ref:data.ref, text:data.text, version:data.version, theme:document.documentElement.getAttribute('data-theme')||'dark', mode:getModeClass(), _ts:Date.now() });
+      if(fromVoice){ const ld = $('lastDetected'); if(ld) ld.textContent = refStr; addRecent(refStr); }
+      console.log('[Verse] Loaded:', data.ref);
+    }catch(e){
+      if(!fromVoice) toast('Error: '+e.message,'bad');
+      if(empty){ empty.style.display='flex'; const h2 = empty.querySelector('h2'); const p = empty.querySelector('p'); if(h2) h2.textContent = 'Error Loading Verse'; if(p) p.innerHTML = '<strong style="color:var(--danger)">'+e.message+'</strong><br><br>Try: John 3:16, Psalm 23:1, Romans 8:28'; }
+    }finally{ if(loader) loader.style.display='none'; }
+  }
+
+  function clearStage(){
+    const card = $('verseCard');
+    const empty = $('emptyState');
+    if(card) card.style.display='none';
+    if(empty){ empty.style.display='flex'; const h2 = empty.querySelector('h2'); const p = empty.querySelector('p'); if(h2) h2.textContent = 'Ready to Display Scripture'; if(p) p.innerHTML = 'Speak a reference, type it manually, or click a keyword. The verse appears instantly.'; }
+    broadcast({type:'clear', _ts:Date.now()});
+  }
+
+  function getModeClass(){
+    const stage = $('live-stage');
+    if(!stage) return 'center';
+    for(const c of stage.classList) if(c.startsWith('mode-')) return c.replace('mode-','');
+    return 'center';
+  }
+
+  function addHistory(ref,text,version){
+    const entry = {ref,text:text||'',version,time:new Date().toLocaleTimeString()};
+    state.history.unshift(entry);
+    if(state.history.length>50) state.history.pop();
+    saveCfg(); renderHistory(); renderOutputLog();
+  }
+
+  function encodeHtml(str){
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderHistory(){
+    const box = $('historyList');
+    if(!box) return;
+    if(!state.history.length){ box.innerHTML='<div style="padding:10px;color:var(--text-faint);font-size:12px;text-align:center">No verses yet</div>'; return; }
+    box.innerHTML = state.history.map(h=>
+      '<div class="history-item" data-ref="'+encodeHtml(h.ref)+'">'+
+      '<div class="h-ref">'+encodeHtml(h.ref)+' <span style="opacity:.6;font-size:10px">'+encodeHtml(h.version)+'</span></div>'+
+      '<div class="h-text">'+encodeHtml((h.text||'').substring(0,120))+((h.text||'').length>120?'...':'')+'</div>'+
+      '<div class="h-time">'+encodeHtml(h.time)+'</div></div>'
+    ).join('');
+  }
+
+  function renderOutputLog(){
+    const box = $('outputLogList');
+    if(!box) return;
+    if(!state.history.length){ box.innerHTML='<div style="padding:10px;color:var(--text-faint);font-size:12px;text-align:center">No verses displayed yet</div>'; return; }
+    box.innerHTML = state.history.map(h=>
+      '<div class="history-item" data-ref="'+encodeHtml(h.ref)+'" style="border-left-color:var(--success)">'+
+      '<div class="h-ref">'+encodeHtml(h.ref)+' <span style="opacity:.6;font-size:10px">'+encodeHtml(h.version)+'</span></div>'+
+      '<div class="h-text">'+encodeHtml((h.text||'').substring(0,120))+((h.text||'').length>120?'...':'')+'</div>'+
+      '<div class="h-time">'+encodeHtml(h.time)+'</div></div>'
+    ).join('');
+  }
+
+  function clearHistory(){ state.history=[]; saveCfg(); renderHistory(); renderOutputLog(); toast('History cleared','ok'); }
+  function exportHistory(){
+    const blob = new Blob([JSON.stringify(state.history,null,2)],{type:'application/json'});
+    const a = document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='smartverse-history.json';
+    a.click();
+  }
+
+  function addRecent(ref){
+    if(!state.recent.includes(ref)) state.recent.unshift(ref);
+    if(state.recent.length>12) state.recent.pop();
+    renderRecent();
+  }
+  function renderRecent(){
+    const el = $('recentList');
+    if(!el) return;
+    el.innerHTML = state.recent.map(r=>
+      '<span class="keyword-chip" data-ref="'+encodeHtml(r)+'">'+encodeHtml(r)+'</span>'
+    ).join('');
+  }
+
+  function buildKeywords(){
+    const el = $('keywordList');
+    if(!el) return;
+    el.innerHTML = Object.entries(KEYWORDS).map(([k,v])=>
+      '<span class="keyword-chip" data-ref="'+encodeHtml(v)+'">'+encodeHtml(k)+'</span>'
+    ).join('');
+  }
+
+  function initDelegatedEvents(){
+    // Global click delegation for ALL data-cmd elements
+    document.addEventListener('click', e=>{
+      const el = e.target.closest('[data-cmd]');
+      if(!el) return;
+      const cmd = el.getAttribute('data-cmd');
+      if(!cmd) return;
+
+      // Allow radio inputs to check naturally, then process
+      if(el.tagName === 'INPUT' && el.type === 'radio'){
+        setTimeout(()=>{
+          if(cmd === 'pickDevice'){
+            const deviceId = el.getAttribute('data-device-id');
+            if(deviceId) pickDevice(deviceId, el.closest('.device-chip') || el);
+          }
+        }, 0);
+        return;
+      }
+
+      e.preventDefault();
+
+      if(cmd === 'pickDevice'){
+        const deviceId = el.getAttribute('data-device-id');
+        if(deviceId) pickDevice(deviceId, el.closest('.device-chip') || el);
+        return;
+      }
+      if(cmd === 'showVerse'){
+        const ref = el.getAttribute('data-ref');
+        if(ref) showVerse(ref);
+        return;
+      }
+      if(cmd === 'showModal'){
+        const target = el.getAttribute('data-modal-target');
+        if(target) showModal(target);
+        return;
+      }
+      if(cmd === 'hideModal'){
+        const target = el.getAttribute('data-modal-target');
+        if(target) hideModal(target);
+        return;
+      }
+      if(cmd === 'sendQueueItem'){
+        const item = el.closest('.queue-item');
+        if(item){ const idx = parseInt(item.getAttribute('data-idx')); sendQueueItem(idx); }
+        return;
+      }
+      if(cmd === 'removeQueueItem'){
+        const item = el.closest('.queue-item');
+        if(item){ const idx = parseInt(item.getAttribute('data-idx')); removeQueueItem(idx); }
+        return;
+      }
+
+      // Direct function mapping for simple commands
+      const directMap = {
+        toggleListen, stopListen, clearStage, connectMic, manualSearch, randomVerse,
+        testParser, testParserClear, setTheme, setMode, setFont, setCustomBg, setBgOpacity, setCardOpacity,
+        clearBgImage, toggleFullscreen, toggleSettings, openOutput, copyObsUrl, testObsOutput,
+        copyCurrent, exportHistory, clearHistory, timerStart, timerReset, saveCfg, buildKeywords,
+        clearQueue, downloadFullBible, cancelDownload, clearBibleDB, testOutputLocal, forceSyncOutput,
+        prevVerse, nextVerse
+      };
+      if(directMap[cmd]){ directMap[cmd](); return; }
+    });
+
+    // Modal background click-to-close
+    document.addEventListener('click', e=>{
+      if(e.target.classList.contains('modal-bg')){
+        const id = e.target.id;
+        if(id) hideModal(id);
+      }
+    });
+
+    // Keyword chips, recent, history, output log (data-ref based)
+    const kw = $('keywordList');
+    if(kw){ kw.addEventListener('click', e=>{ const chip = e.target.closest('.keyword-chip'); if(chip){ const ref = chip.getAttribute('data-ref'); if(ref) showVerse(ref); } }); }
+    const rl = $('recentList');
+    if(rl){ rl.addEventListener('click', e=>{ const chip = e.target.closest('.keyword-chip'); if(chip){ const ref = chip.getAttribute('data-ref'); if(ref) showVerse(ref); } }); }
+    const hl = $('historyList');
+    if(hl){ hl.addEventListener('click', e=>{ const item = e.target.closest('.history-item'); if(item){ const ref = item.getAttribute('data-ref'); if(ref) showVerse(ref); } }); }
+    const ol = $('outputLogList');
+    if(ol){ ol.addEventListener('click', e=>{ const item = e.target.closest('.history-item'); if(item){ const ref = item.getAttribute('data-ref'); if(ref) showVerse(ref); } }); }
+
+    // Queue list (data-action based)
+    const ql = $('queueList');
+    if(ql){ ql.addEventListener('click', e=>{
+      const btn = e.target.closest('.btn');
+      if(!btn) return;
+      const item = btn.closest('.queue-item');
+      if(!item) return;
+      const idx = parseInt(item.getAttribute('data-idx'));
+      const action = btn.getAttribute('data-action');
+      if(action === 'send'){ sendQueueItem(idx); }
+      else if(action === 'remove'){ removeQueueItem(idx); }
+    }); }
+
+    // Change events for form elements
+    document.addEventListener('change', e=>{
+      const cmd = e.target.getAttribute('data-change-cmd');
+      if(!cmd) return;
+      if(cmd === 'saveCfg'){ saveCfg(); return; }
+      if(cmd === 'setMode'){ setMode(e.target.value); return; }
+      if(cmd === 'setTheme'){ setTheme(e.target.value); return; }
+      if(cmd === 'handleBgImage'){ handleBgImage(e.target); return; }
+      if(cmd === 'setCustomBg'){ setCustomBg(e.target.value); return; }
+    });
+
+    // Input events for range sliders and text inputs
+    document.addEventListener('input', e=>{
+      const cmd = e.target.getAttribute('data-input-cmd');
+      if(!cmd) return;
+      if(cmd === 'saveCfg'){ saveCfg(); return; }
+      if(cmd === 'setBgOpacity'){ setBgOpacity(e.target.value); return; }
+      if(cmd === 'setCardOpacity'){ setCardOpacity(e.target.value); return; }
+      if(cmd === 'setFont'){ setFont(e.target.value); return; }
+    });
+  }
+
+  function manualSearch(){
+    const val = $('manualInput') ? $('manualInput').value.trim() : '';
+    if(!val) return;
+    showVerse(val);
+    const inp = $('manualInput');
+    if(inp) inp.value='';
+  }
+  async function randomVerse(){
+    const books = BOOKS.filter(b=>b.ch>0);
+    const bk = books[Math.floor(Math.random()*books.length)];
+    const ch = Math.floor(Math.random()*bk.ch)+1;
+    const vs = Math.floor(Math.random()*30)+1;
+    await showVerse(bk.n + ' ' + ch + ':' + vs);
+  }
+
+  function testParser(){
+    const val = $('testParser') ? $('testParser').value.trim() : '';
+    if(!val) return;
+    const parsed = parseReference(val);
+    const debug = $('parserDebug');
+    if(debug) debug.textContent = parsed ? 'PARSED: ' + parsed.ref : 'NO MATCH — trying semantic...';
+    if(parsed) { showVerse(parsed.ref); }
+    else {
+      detectSemanticQuote(val).then(match => {
+        if (match) { if(debug) debug.textContent = 'SEMANTIC: ' + match.ref + ' (' + Math.round(match.score*100) + '%)'; showVerse(match.ref); }
+        else { if(debug) debug.textContent = 'NO MATCH'; }
+      });
+    }
+  }
+  function testParserClear(){
+    const tp = $('testParser'), pd = $('parserDebug');
+    if(tp) tp.value='';
+    if(pd) pd.textContent='Parser: waiting...';
+  }
+
+  async function connectMic(){
+    try{
+      const constraints = {audio: state.selDevice==='default' ? true : {deviceId:{exact:state.selDevice}}};
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      state.mediaStream = stream;
+      state.connected = true;
+      state.audioContext = new (window.AudioContext||window.webkitAudioContext)();
+      state.analyser = state.audioContext.createAnalyser();
+      state.analyser.fftSize = 512;
+      const src = state.audioContext.createMediaStreamSource(stream);
+      src.connect(state.analyser);
+      const ms = $('micStatus');
+      if(ms){ ms.textContent = 'Connected'; ms.classList.add('connected'); }
+      const bl = $('btnListen');
+      if(bl) bl.disabled = false;
+      const sd = $('statusDot');
+      if(sd) sd.classList.add('on');
+      const st = $('statusText');
+      if(st) st.textContent = 'Mic Ready';
+      listDevices();
+      updateStatusDisplays();
+      toast('Microphone connected','ok');
+    }catch(e){ toast('Mic error: '+e.message,'bad'); }
+  }
+
+  async function listDevices(){
+    try{
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      state.devices = devs.filter(d=>d.kind==='audioinput');
+      const box = $('deviceList');
+      if(!box) return;
+      box.innerHTML = state.devices.map((d,i)=>
+        '<div class="device-chip '+(d.deviceId===state.selDevice?'active':'')+'" data-id="'+encodeHtml(d.deviceId)+'" data-cmd="pickDevice" data-device-id="'+encodeHtml(d.deviceId)+'">'+
+        '<input type="radio" name="mic" '+(d.deviceId===state.selDevice?'checked':'')+' data-cmd="pickDevice" data-device-id="'+encodeHtml(d.deviceId)+'">'+
+        '<span>'+encodeHtml(d.label||'Mic '+(i+1))+'</span></div>'
+      ).join('');
+    }catch(e){}
+  }
+
+  function pickDevice(id,el){
+    state.selDevice=id;
+    document.querySelectorAll('.device-chip').forEach(c=>c.classList.remove('active'));
+    if(el){ el.classList.add('active'); const radio=el.querySelector('input[type="radio"]'); if(radio) radio.checked=true; }
+  }
+
+  function toggleListen(){
+    if(!state.connected){ toast('Connect microphone first','warn'); return; }
+    const useBrowser = $('useBrowserSpeech') && $('useBrowserSpeech').checked;
+    if(!useBrowser){
+      const key = $('dgKey') ? $('dgKey').value.trim() : '';
+      if(!key){ toast('Enter Deepgram key or enable Browser Speech','warn'); return; }
+    }
+    if(state.recording){ stopListen(); return; }
+    startListen();
+  }
+
+  function startListen(){
+    if(state.recording) return;
+    const useBrowser = $('useBrowserSpeech') && $('useBrowserSpeech').checked;
+    if(useBrowser){ startBrowserSpeech(); }
+    else { startDeepgramListen(); }
+  }
+
+  function startDeepgramListen(){
+    state.dgKey = $('dgKey') ? $('dgKey').value.trim() : '';
+    state.recording = true;
+    state.audioChunks = [];
+    state.lastTranscript = '';
+    updateListenUI(true, 'Recording...');
+    const tb = $('transcriptBox');
+    if(tb) tb.innerHTML = '<div class="heard-label">Recording — speak your reference, then click Stop</div>';
+    let mimeType = 'audio/webm';
+    if(!MediaRecorder.isTypeSupported(mimeType)){ mimeType = 'audio/mp4'; if(!MediaRecorder.isTypeSupported(mimeType)) mimeType = ''; }
+    const options = mimeType ? {mimeType} : {};
+    try{ state.mediaRecorder = new MediaRecorder(state.mediaStream, options); }
+    catch(e){ toast('Recording not supported. Switch to Browser Speech.','bad'); stopListen(); return; }
+    state.mediaRecorder.ondataavailable = e=>{ if(e.data && e.data.size>0) state.audioChunks.push(e.data); };
+    state.mediaRecorder.onstop = ()=>{
+      const totalBytes = state.audioChunks.reduce((a,c)=>a+c.size,0);
+      if(totalBytes > 100){ sendToDeepgram(); }
+      else { const tb2 = $('transcriptBox'); if(tb2) tb2.innerHTML = '<div class="heard-label">No audio captured</div><span class="interim">Try speaking louder or closer to the mic.</span>'; toast('No audio captured','warn'); }
+    };
+    state.mediaRecorder.onerror = e=>{ toast('Recording error','bad'); stopListen(); };
+    state.mediaRecorder.start(100);
+  }
+
+  function stopListen(){
+    if(!state.recording) return;
+    state.recording = false;
+    state.allFinal = '';
+    if(state.keepAliveInt){ clearInterval(state.keepAliveInt); state.keepAliveInt = null; }
+    const useBrowser = $('useBrowserSpeech') && $('useBrowserSpeech').checked;
+    if(useBrowser && state.recognition){ try{ state.recognition.stop(); }catch(e){} state.recognition = null; }
+    if(!useBrowser && state.mediaRecorder && state.mediaRecorder.state!=='inactive'){
+      try{ state.mediaRecorder.requestData(); }catch(e){}
+      setTimeout(()=>{ try{ if(state.mediaRecorder && state.mediaRecorder.state!=='inactive') state.mediaRecorder.stop(); }catch(e){} }, 300);
+    }
+    updateListenUI(false, 'Ready');
+  }
+
+  function updateListenUI(active, statusText){
+    const bl = $('btnListen');
+    const sd = $('statusDot');
+    const st = $('statusText');
+    if(bl){
+      if(active){ bl.classList.add('listening'); bl.innerHTML = '<span style="animation:pulse-dot 1.2s infinite;display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:6px"></span> Stop'; }
+      else { bl.classList.remove('listening'); bl.innerHTML = '<span id="listenIcon">&#9679;</span> <span id="listenText">Listen</span>'; }
+    }
+    if(sd){ if(active) sd.classList.add('live'); else sd.classList.remove('live'); }
+    if(st && statusText) st.textContent = statusText;
+  }
+
+  async function sendToDeepgram(){
+    if(!state.mediaRecorder) return;
+    const blob = new Blob(state.audioChunks, {type: state.mediaRecorder.mimeType || 'audio/webm'});
+    const tb = $('transcriptBox');
+    if(tb) tb.innerHTML = '<div class="heard-label">Processing with Deepgram...</div>';
+    try{
+      const controller = new AbortController();
+      const timeoutId = setTimeout(()=>controller.abort(), 30000);
+      const url = 'https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&punctuate=true&language=en';
+      const response = await fetch(url, { method: 'POST', headers: {'Authorization': 'Token ' + state.dgKey}, body: blob, signal: controller.signal });
+      clearTimeout(timeoutId);
+      if(!response.ok){ const errText = await response.text(); throw new Error('HTTP '+response.status+': '+errText.substring(0,200)); }
+      const data = await response.json();
+      let transcript = ''; let confidence = 0;
+      try{ transcript = data.results?.channels?.[0]?.alternatives?.[0]?.transcript || ''; confidence = data.results?.channels?.[0]?.alternatives?.[0]?.confidence || 0; }catch(e){}
+      if(transcript && transcript.trim()){
+        const tb2 = $('transcriptBox');
+        if(tb2) tb2.innerHTML = '<div class="heard-label">Heard ('+(confidence*100).toFixed(0)+'% confidence)</div><span class="final">'+transcript+'</span>';
+        processTranscript(transcript, true);
+      } else {
+        const tb3 = $('transcriptBox');
+        if(tb3) tb3.innerHTML = '<div class="heard-label">No speech detected</div><span class="interim">Try speaking louder or closer to the mic.</span>';
+        toast('No speech detected','warn');
+      }
+    }catch(e){
+      const tb4 = $('transcriptBox');
+      if(tb4) tb4.innerHTML = '<div class="heard-label">Deepgram Error</div><span class="interim">'+e.message+'</span>';
+      toast('Deepgram error: '+e.message,'bad');
+    }
+  }
+
+  function startBrowserSpeech(){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SpeechRecognition){ toast('Browser Speech not supported. Use Chrome/Edge/Safari.','bad'); stopListen(); return; }
+    state.recording = true;
+    state.lastTranscript = '';
+    state.restartCounter = 0;
+    state.allFinal = '';
+    updateListenUI(true, 'Live Listening');
+    const tb = $('transcriptBox');
+    if(tb) tb.innerHTML = '<div class="live-indicator"><div class="pulse"></div> LIVE — Speak your Bible reference</div>';
+    createRecognition();
+  }
+
+  function createRecognition(){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SpeechRecognition) return;
+    if(state.recognition){ try{ state.recognition.onend = null; state.recognition.onresult = null; state.recognition.onerror = null; }catch(e){} }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+    let lastProcessedIndex = 0;
+    recognition.onresult = (event) => {
+      let newFinalText = '';
+      let interimText = '';
+      let hasNewFinal = false;
+      for(let i = event.resultIndex; i < event.results.length; i++){
+        const transcript = event.results[i][0].transcript;
+        if(event.results[i].isFinal){ if(i >= lastProcessedIndex){ newFinalText += transcript + ' '; hasNewFinal = true; state.allFinal += transcript + ' '; } }
+        else { interimText += transcript; }
+      }
+      if(hasNewFinal){ lastProcessedIndex = event.results.length; }
+      const tb = $('transcriptBox');
+      if(tb){
+        let html = '<div class="live-indicator"><div class="pulse"></div> LIVE';
+        if(state.restartCounter > 0) html += ' <span style="color:var(--warning);font-size:9px">(restarted '+state.restartCounter+'x)</span>';
+        html += '</div>';
+        if(state.allFinal.trim()) html += '<div style="font-size:10px;color:var(--text-faint);margin-bottom:2px">Heard so far:</div><div class="final" style="margin-bottom:6px">'+state.allFinal.trim()+'</div>';
+        if(interimText.trim()) html += '<div style="font-size:10px;color:var(--text-faint);margin-bottom:2px">Listening:</div><div class="interim">'+interimText.trim()+'</div>';
+        tb.innerHTML = html;
+      }
+      if(newFinalText.trim()){ processTranscript(newFinalText.trim(), true); }
+      // Interim results are displayed for feedback but NOT parsed for detection
+    };
+    recognition.onerror = (event) => {
+      if(event.error === 'not-allowed'){ toast('Microphone permission denied','bad'); stopListen(); }
+      else if(event.error === 'no-speech'){}
+      else if(event.error === 'aborted'){}
+      else if(event.error === 'network'){ console.warn('[BrowserSpeech] Network error, will auto-restart...'); }
+      else if(event.error === 'service-not-allowed'){ toast('Speech service not allowed on this domain','bad'); stopListen(); }
+      else { console.warn('[BrowserSpeech] Error:', event.error); }
+    };
+    recognition.onend = () => {
+      if(state.recording){
+        state.restartCounter++;
+        updateStatusDisplays();
+        console.log('[BrowserSpeech] Auto-restarting... count:', state.restartCounter);
+        setTimeout(()=>{ if(state.recording) createRecognition(); }, 50);
+      }
+    };
+    state.recognition = recognition;
+    try{ recognition.start(); console.log('[BrowserSpeech] Started'); }
+    catch(e){
+      console.error('[BrowserSpeech] Start failed:', e);
+      setTimeout(()=>{ try{ recognition.start(); }catch(e2){ toast('Speech recognition failed. Please refresh.','bad'); stopListen(); } }, 100);
+    }
+  }
+
+  function processTranscript(text, isFinal){
+    const pd = $('parserDebug');
+    const parsed = parseReference(text);
+    if(parsed){
+      if(pd) pd.textContent = 'DETECTED: ' + parsed.ref + ' | Raw: ' + text.substring(0,60);
+      const ld = $('lastDetected');
+      if(ld) ld.textContent = parsed.ref;
+      const cacheKey = parsed.ref.toLowerCase();
+      const now = Date.now();
+      if(cacheKey === state.lastDetectRef && (now - state.lastDetectTime < 2000)){ return; }
+      let confidence = 50;
+      if(parsed.verse) confidence += 30;
+      if(parsed.book) confidence += 20;
+      confidence = Math.min(99, confidence);
+      if(isFinal){
+        state.lastDetectTime = now;
+        state.lastDetectRef = cacheKey;
+        addToQueue(parsed.ref, confidence, 'Speech (Final)');
+      }
+    } else {
+      if (isFinal && text.length > 20) {
+        detectSemanticQuote(text).then(match => {
+          if (match) {
+            if(pd) pd.textContent = 'SEMANTIC: ' + match.ref + ' (' + Math.round(match.score*100) + '%)';
+            const ld = $('lastDetected');
+            if(ld) ld.textContent = match.ref;
+            const now = Date.now();
+            if (match.ref.toLowerCase() !== state.lastDetectRef || (now - state.lastDetectTime > 3000)) {
+              state.lastDetectTime = now;
+              state.lastDetectRef = match.ref.toLowerCase();
+              addToQueue(match.ref, Math.round(match.score*100), 'Semantic (Quote)');
+            }
+          } else {
+            if(pd) pd.textContent = 'Listening... Raw: ' + text.substring(0,60);
+          }
+        });
+      } else {
+        if(pd) pd.textContent = 'Listening... Raw: ' + text.substring(0,60);
+      }
+    }
+  }
+
+  function initWaveform(){
+    const cvs = $('waveCanvas');
+    if(!cvs) return;
+    const ctx = cvs.getContext('2d');
+    function resize(){ const parent = cvs.parentElement; if(parent){ cvs.width = parent.clientWidth || 260; cvs.height = parent.clientHeight || 56; } }
+    resize();
+    window.addEventListener('resize', resize);
+    function draw(){
+      requestAnimationFrame(draw);
+      if(!state.analyser || !cvs.width){ ctx.clearRect(0,0,cvs.width,cvs.height); return; }
+      const w=cvs.width, h=cvs.height;
+      const data = new Uint8Array(state.analyser.frequencyBinCount);
+      state.analyser.getByteFrequencyData(data);
+      ctx.clearRect(0,0,w,h);
+      const bars = 40;
+      const barW = w / bars;
+      const step = Math.floor(data.length / bars);
+      for(let i=0; i<bars; i++){
+        const idx = i * step;
+        const val = data[idx] || 0;
+        const barH = (val / 255) * h * 0.85;
+        const x = i * barW + barW * 0.1;
+        const y = (h - barH) / 2;
+        const grad = ctx.createLinearGradient(0, y, 0, y + barH);
+        if(state.recording){
+          grad.addColorStop(0, 'rgba(239,68,68,0.2)');
+          grad.addColorStop(0.5, 'rgba(239,68,68,0.9)');
+          grad.addColorStop(1, 'rgba(239,68,68,0.2)');
+        } else {
+          grad.addColorStop(0, 'rgba(245,158,11,0.15)');
+          grad.addColorStop(0.5, 'rgba(245,158,11,0.7)');
+          grad.addColorStop(1, 'rgba(245,158,11,0.15)');
+        }
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        if(typeof ctx.roundRect === 'function'){ ctx.roundRect(x, y, barW * 0.8, barH, 4); }
+        else { ctx.rect(x, y, barW * 0.8, barH); }
+        ctx.fill();
+      }
+    }
+    draw();
+  }
+
+  function broadcast(data){
+    data._ts = Date.now();
+    const payload = JSON.stringify(data);
+    try{ localStorage.setItem('smartverse_sync_v12', payload); }catch(e){}
+    if(data.type==='verse'){ try{ localStorage.setItem('smartverse_last_verse_v12', payload); }catch(e){} }
+    if(bc){ try{ bc.postMessage(data); }catch(e){} }
+    if(state.outputWin && !state.outputWin.closed){ try{ state.outputWin.postMessage(data, '*'); }catch(e){} }
+  }
+
+  function handleBroadcast(data){
+    if(!data || !data.type) return;
+    if(data.type==='verse'){
+      const vRef = $('vRef'), vBody = $('vBody'), vMeta = $('vMeta');
+      const card = $('verseCard'), empty = $('emptyState');
+      if(vRef) vRef.textContent = data.ref + (data.version ? ' • ' + data.version : '');
+      if(vBody) vBody.textContent = data.text || '[No text]';
+      if(vMeta) vMeta.textContent = 'SmartVerse Display';
+      if(card){ card.style.display='block'; card.style.animation = 'none'; void card.offsetHeight; card.style.animation = ''; }
+      if(empty) empty.style.display='none';
+      if(data.theme) setTheme(data.theme);
+      if(data.mode) setMode(data.mode);
+    } else if(data.type==='clear'){
+      const card = $('verseCard'), empty = $('emptyState');
+      if(card) card.style.display='none';
+      if(empty) empty.style.display='flex';
+    } else if(data.type==='mode'){
+      if(data.mode) setMode(data.mode);
+    }
+
+    // Output view elements
+    const outStage = $('output-stage');
+    const outCard = $('output-verse-card');
+    const outEmpty = $('output-empty');
+    const outRef = $('output-ref');
+    const outBody = $('output-body');
+    const outMeta = $('output-meta');
+
+    if(data.type==='verse'){
+      if(outRef) outRef.textContent = data.ref + (data.version ? ' • ' + data.version : '');
+      if(outBody) outBody.textContent = data.text || '[No text]';
+      if(outMeta) outMeta.textContent = 'SmartVerse Display';
+      if(outCard) outCard.style.display='block';
+      if(outEmpty) outEmpty.style.display='none';
+      if(outStage && data.mode){
+        Array.from(outStage.classList).forEach(c=>{ if(c.startsWith('mode-')) outStage.classList.remove(c); });
+        outStage.classList.add('mode-'+data.mode);
+      }
+      if(data.theme) document.documentElement.setAttribute('data-theme', data.theme);
+    } else if(data.type==='clear'){
+      if(outCard) outCard.style.display='none';
+      if(outEmpty) outEmpty.style.display='flex';
+    } else if(data.type==='mode'){
+      if(outStage && data.mode){
+        Array.from(outStage.classList).forEach(c=>{ if(c.startsWith('mode-')) outStage.classList.remove(c); });
+        outStage.classList.add('mode-'+data.mode);
+      }
+      if(data.theme) document.documentElement.setAttribute('data-theme', data.theme);
+    }
+  }
+
+  function initOutputReceiver(){
+    console.log('[SmartVerse Output] Receiver initialized');
+    updateOutputStatus('Waiting for controller...');
+    try{
+      const raw = localStorage.getItem('smartverse_cfg_v12');
+      if(raw){
+        const cfg = JSON.parse(raw);
+        if(cfg.mode){
+          const outStage = $('output-stage');
+          if(outStage){ Array.from(outStage.classList).forEach(c=>{ if(c.startsWith('mode-')) outStage.classList.remove(c); }); outStage.classList.add('mode-'+cfg.mode); }
+        }
+        if(cfg.theme) document.documentElement.setAttribute('data-theme', cfg.theme);
+      }
+    }catch(e){}
+    try{
+      const lastRaw = localStorage.getItem('smartverse_last_verse_v12');
+      if(lastRaw){
+        const lastData = JSON.parse(lastRaw);
+        if(lastData && lastData.type === 'verse'){
+          console.log('[Output] Loaded last verse:', lastData.ref);
+          handleBroadcast(lastData);
+          updateOutputStatus('Last: ' + lastData.ref);
+        }
+      }
+    }catch(e){}
+    window.addEventListener('storage', e=>{
+      if(e.key === 'smartverse_sync_v12' || e.key === 'smartverse_last_verse_v12'){
+        try{ const data = JSON.parse(e.newValue); if(data && data.type){ handleBroadcast(data); updateOutputStatus('Live: ' + (data.ref||data.type)); } }catch(err){}
+      }
+    });
+    if(bc){ bc.onmessage = e => { if(e.data && e.data.type){ handleBroadcast(e.data); updateOutputStatus('Live: ' + (e.data.ref||e.data.type)); } }; }
+    let lastTs = 0;
+    setInterval(()=>{
+      try{
+        const raw = localStorage.getItem('smartverse_sync_v12');
+        if(!raw) return;
+        const data = JSON.parse(raw);
+        if(data._ts && data._ts !== lastTs){ lastTs = data._ts; handleBroadcast(data); updateOutputStatus('Live: ' + (data.ref||data.type)); }
+      }catch(e){}
+    }, 250);
+    window.addEventListener('message', e=>{ if(e.data && e.data.type){ handleBroadcast(e.data); updateOutputStatus('Live: ' + (e.data.ref||e.data.type)); } });
+  }
+
+  function updateOutputStatus(msg){
+    const os = $('output-status');
+    if(os) os.textContent = 'Status: ' + msg;
+  }
+
+  function testOutputLocal(){
+    handleBroadcast({
+      type:'verse', ref:'Test Verse • KJV', text:'This is a local test. If you can see this, the output display is working correctly.',
+      theme:document.documentElement.getAttribute('data-theme')||'dark',
+      mode:'center', _ts:Date.now()
+    });
+    updateOutputStatus('Local test OK');
+  }
+
+  function forceSyncOutput(){
+    try{
+      const raw = localStorage.getItem('smartverse_last_verse_v12');
+      if(raw){
+        const data = JSON.parse(raw);
+        if(data && data.type === 'verse'){ handleBroadcast(data); updateOutputStatus('Synced: ' + data.ref); return; }
+      }
+      updateOutputStatus('No verse found in memory');
+    }catch(e){ updateOutputStatus('Sync failed: ' + e.message); }
+  }
+
+  function openOutput(){
+    const url = location.href.split('?')[0].split('#')[0] + '?view=output';
+    state.outputWin = window.open(url, 'smartverse_output_v12', 'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no');
+    if(!state.outputWin || state.outputWin.closed){ toast('Popup blocked! Allow popups for this site.','bad'); return; }
+    toast('Output window opened','ok');
+  }
+
+  function setTheme(t){ document.documentElement.setAttribute('data-theme', t); saveCfg(); }
+  function setMode(m){
+    const stage = $('live-stage');
+    if(!stage) return;
+    Array.from(stage.classList).forEach(c=>{ if(c.startsWith('mode-')) stage.classList.remove(c); });
+    stage.classList.add(m.startsWith('mode-')?m:'mode-'+m);
+    updateStatusDisplays();
+    saveCfg();
+    broadcast({type:'mode', mode:m, _ts:Date.now()});
+  }
+  function setFont(v){
+    const size = parseInt(v);
+    const fv = $('fontVal');
+    if(fv) fv.textContent = size;
+    document.documentElement.style.setProperty('--verse-font', size + 'px');
+    document.documentElement.style.setProperty('--ref-font', Math.max(14, Math.floor(size * 0.55)) + 'px');
+    saveCfg();
+  }
+  function setCardOpacity(v){
+    const val = parseInt(v);
+    const coval = $('cardOpacityVal');
+    if(coval) coval.textContent = val;
+    document.documentElement.style.setProperty('--card-opacity', val / 100);
+    saveCfg();
+  }
+  function setCustomBg(color){
+    document.documentElement.style.setProperty('--stage-bg', 'radial-gradient(ellipse at 50% 50%, var(--accent-glow) 0%, transparent 60%), ' + color);
+    saveCfg();
+  }
+  function handleBgImage(input){
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const dataUrl = e.target.result;
+      document.documentElement.style.setProperty('--stage-bg-img', 'url('+dataUrl+')');
+      const ls = $('live-stage');
+      if(ls) ls.classList.add('has-bg-img');
+      const bil = $('bgImageLabel');
+      if(bil) bil.textContent = file.name;
+      saveCfg();
+      toast('Background image set','ok');
+    };
+    reader.readAsDataURL(file);
+  }
+  function clearBgImage(){
+    document.documentElement.style.removeProperty('--stage-bg-img');
+    const ls = $('live-stage');
+    if(ls) ls.classList.remove('has-bg-img');
+    const bil = $('bgImageLabel');
+    if(bil) bil.textContent = 'Click to upload image';
+    const bii = $('bgImageInput');
+    if(bii) bii.value = '';
+    saveCfg();
+  }
+  function setBgOpacity(v){
+    const bov = $('bgOpacityVal');
+    if(bov) bov.textContent = v;
+    document.documentElement.style.setProperty('--stage-bg-opacity', v/100);
+    saveCfg();
+  }
+  function toggleFullscreen(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+
+  function toggleSettings(){
+    const panel = $('settingsPanel');
+    const btn = $('btnSettings');
+    if(!panel) return;
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if(btn) btn.classList.toggle('btn-settings-active', isHidden);
+    saveCfg();
+  }
+
+  function timerStart(){
+    if(state.timerInt){ clearInterval(state.timerInt); state.timerInt=null; }
+    state.timerInt = setInterval(()=>{
+      state.timer++;
+      const h=String(Math.floor(state.timer/3600)).padStart(2,'0');
+      const m=String(Math.floor((state.timer%3600)/60)).padStart(2,'0');
+      const s=String(state.timer%60).padStart(2,'0');
+      const td = $('timerDisplay');
+      if(td) td.textContent = h+':'+m+':'+s;
+    },1000);
+  }
+  function timerReset(){
+    if(state.timerInt){clearInterval(state.timerInt);state.timerInt=null;}
+    state.timer=0;
+    const td = $('timerDisplay');
+    if(td) td.textContent='00:00:00';
+  }
+
+  // Prev / Next Navigation
+  async function prevVerse(){
+    console.log('[prevVerse] clicked, current:', JSON.stringify(state.currentVerseRef));
+    if(!state.currentVerseRef){ toast('No verse active. Display one first.','warn'); return; }
+    const {book, chapter, verse} = state.currentVerseRef;
+    const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
+    if(!bk){ toast('Book not found','bad'); return; }
+    let targetChapter = chapter;
+    let targetVerse = verse - 1;
+    if(targetVerse < 1){
+      targetChapter = chapter - 1;
+      if(targetChapter < 1){ toast('Beginning of book','warn'); return; }
+      targetVerse = 1;
+    }
+    const ref = book + ' ' + targetChapter + ':' + targetVerse;
+    console.log('[prevVerse] navigating to:', ref);
+    await showVerse(ref, false);
+  }
+
+  async function nextVerse(){
+    console.log('[nextVerse] clicked, current:', JSON.stringify(state.currentVerseRef));
+    if(!state.currentVerseRef){ toast('No verse active. Display one first.','warn'); return; }
+    const {book, chapter, verse} = state.currentVerseRef;
+    const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
+    if(!bk){ toast('Book not found','bad'); return; }
+    let targetChapter = chapter;
+    let targetVerse = verse + 1;
+    if(targetVerse > 200){
+      targetChapter = chapter + 1;
+      if(targetChapter > bk.ch){ toast('End of book','warn'); return; }
+      targetVerse = 1;
+    }
+    const ref = book + ' ' + targetChapter + ':' + targetVerse;
+    console.log('[nextVerse] navigating to:', ref);
+    await showVerse(ref, false);
+  }
+
+  function saveCfg(){
+    const cfg = {
+      dgKey: $('dgKey') ? $('dgKey').value : '',
+      useBrowserSpeech: $('useBrowserSpeech') ? $('useBrowserSpeech').checked : false,
+      autoDisplay: $('autoDisplay') ? $('autoDisplay').checked : false,
+      trans: $('selTrans') ? $('selTrans').value : 'kjv',
+      theme: document.documentElement.getAttribute('data-theme')||'dark',
+      mode: getModeClass(),
+      font: $('rngFont') ? $('rngFont').value : '28',
+      cardOpacity: $('cardOpacity') ? $('cardOpacity').value : '88',
+      bgOpacity: $('bgOpacity') ? $('bgOpacity').value : '100',
+      history: state.history.slice(0,20),
+      settingsOpen: $('settingsPanel') ? $('settingsPanel').style.display === 'block' : false
+    };
+    try{ localStorage.setItem('smartverse_cfg_v12', JSON.stringify(cfg)); }catch(e){}
+  }
+
+  function loadCfg(){
+    try{
+      const raw = localStorage.getItem('smartverse_cfg_v12');
+      if(!raw) return;
+      const cfg = JSON.parse(raw);
+      const dgk = $('dgKey');
+      if(dgk && cfg.dgKey) dgk.value = cfg.dgKey;
+      const ubs = $('useBrowserSpeech');
+      if(ubs && cfg.useBrowserSpeech !== undefined) ubs.checked = cfg.useBrowserSpeech;
+      const ad = $('autoDisplay');
+      if(ad && cfg.autoDisplay !== undefined) ad.checked = cfg.autoDisplay;
+      const st = $('selTrans');
+      if(st && cfg.trans) st.value = cfg.trans;
+      if(cfg.theme){ setTheme(cfg.theme); const selT = $('selTheme'); if(selT) selT.value = cfg.theme; }
+      if(cfg.mode){ setMode(cfg.mode); const selM = $('selMode'); if(selM) selM.value = cfg.mode; }
+      if(cfg.font){ const rf = $('rngFont'); if(rf){ rf.value = cfg.font; setFont(cfg.font); } }
+      if(cfg.cardOpacity){ const co = $('cardOpacity'); if(co){ co.value = cfg.cardOpacity; setCardOpacity(cfg.cardOpacity); } }
+      if(cfg.bgOpacity){ const bo = $('bgOpacity'); if(bo){ bo.value = cfg.bgOpacity; setBgOpacity(cfg.bgOpacity); } }
+      if(cfg.history) state.history = cfg.history;
+      if(cfg.settingsOpen){ const panel = $('settingsPanel'); const btn = $('btnSettings'); if(panel){ panel.style.display = 'block'; } if(btn){ btn.classList.add('btn-settings-active'); } }
+    }catch(e){}
+  }
+
+  function showModal(id){ const el=$(id); if(el) el.classList.add('on'); }
+  function hideModal(id){ const el=$(id); if(el) el.classList.remove('on'); }
+  function copyCurrent(){
+    const txt = ($('vRef')? $('vRef').textContent : '') + '\n' + ($('vBody')? $('vBody').textContent : '');
+    navigator.clipboard.writeText(txt)
+      .then(() => toast('Copied','ok'))
+      .catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        toast('Copied','ok');
+      });
+  }
+  function toast(msg, type){
+    const box = $('toasts');
+    if(!box) return;
+    const t = document.createElement('div');
+    t.className = 'toast '+(type||'');
+    t.textContent = msg;
+    box.appendChild(t);
+    setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
+  }
+
+  function initKeyboard(){
+    document.addEventListener('keydown', e=>{
+      if(e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA' || e.target.tagName==='SELECT'){
+        if(e.key==='Enter'){
+          const cmd = e.target.getAttribute('data-enter-cmd');
+          if(cmd){
+            e.preventDefault();
+            const directMap = { testParser, manualSearch };
+            if(directMap[cmd]) directMap[cmd]();
+          }
+        }
+        return;
+      }
+      if(e.code==='Space'){ e.preventDefault(); toggleListen(); }
+      if(e.code==='Escape'){ clearStage(); }
+      if(e.code==='KeyF'){ toggleFullscreen(); }
+    });
+  }
+
+  
+  // ==================== SOCKET.IO BACKEND SYNC ====================
+  let socket = null;
+  let socketConnected = false;
+
+  function getSocketUrl() {
+    const override = localStorage.getItem('smartverse_socket_url');
+    if (override) return override;
+    return window.location.origin;
+  }
+
+  async function loadSocketIO() {
+    return new Promise((resolve, reject) => {
+      if (window.io) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/socket.io-client@4.7.2/dist/socket.io.min.js';
+      script.onload = () => { console.log('[Socket] Library loaded'); resolve(); };
+      script.onerror = () => { reject(new Error('Failed to load Socket.IO')); };
+      document.head.appendChild(script);
+    });
+  }
+
+  async function initSocket() {
+    try {
+      await loadSocketIO();
+      if (socket) { try { socket.disconnect(); } catch(e) {} }
+      const url = getSocketUrl();
+      socket = io(url, { transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: 10 });
+
+      socket.on('connect', () => {
+        console.log('[Socket] Connected to', url);
+        socketConnected = true;
+        updateBackendStatus('connected');
+        const isOutput = document.documentElement.classList.contains('output-mode');
+        socket.emit('join', { role: isOutput ? 'output' : 'controller', clientId: 'smartverse_' + Date.now() });
+        if (isOutput) { socket.emit('get_current_state'); }
+      });
+
+      socket.on('verse_update', (data) => {
+        console.log('[Socket] Received verse:', data.ref);
+        handleBroadcast({ ...data, type: 'verse' });
+        updateOutputStatus('Live: ' + data.ref);
+      });
+
+      socket.on('clear_verse', () => {
+        handleBroadcast({ type: 'clear' });
+        updateOutputStatus('Cleared');
+      });
+
+      socket.on('mode_update', (data) => {
+        if (data.mode) setMode(data.mode);
+        if (data.theme) setTheme(data.theme);
+      });
+
+      socket.on('current_state', (data) => {
+        if (data.verse) {
+          handleBroadcast({ ...data.verse, type: 'verse' });
+          updateOutputStatus('Synced: ' + data.verse.ref);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        console.log('[Socket] Disconnected');
+        socketConnected = false;
+        updateBackendStatus('disconnected');
+      });
+
+      socket.on('connect_error', (err) => {
+        console.warn('[Socket] Connection error:', err.message);
+        socketConnected = false;
+        updateBackendStatus('error');
+      });
+    } catch (e) {
+      console.warn('[Socket] Init failed:', e);
+      updateBackendStatus('error');
+    }
+  }
+
+  function updateBackendStatus(status) {
+    const el = $('backendStatus');
+    if (!el) return;
+    const map = {
+      connected: { text: 'Backend Connected', cls: 'ok' },
+      disconnected: { text: 'Backend Disconnected', cls: 'warn' },
+      error: { text: 'Backend Error', cls: 'bad' },
+      none: { text: 'No Backend', cls: '' }
+    };
+    const info = map[status] || map.none;
+    el.textContent = info.text;
+    el.className = 'api-pill ' + info.cls;
+  }
+
+  // Override broadcast to include socket
+  const _origBroadcast = broadcast;
+  broadcast = function(data) {
+    _origBroadcast(data);
+    if (socket && socket.connected) {
+      if (data.type === 'verse') {
+        socket.emit('display_verse', { ref: data.ref, text: data.text, version: data.version, theme: data.theme, mode: data.mode });
+      } else if (data.type === 'clear') {
+        socket.emit('clear_verse');
+      } else if (data.type === 'mode') {
+        socket.emit('set_mode', { mode: data.mode, theme: document.documentElement.getAttribute('data-theme') || 'dark' });
+      }
+    }
+  };
+return {
+    init, toggleListen, stopListen, clearStage,
+    connectMic, pickDevice, listDevices,
+    showVerse, manualSearch, randomVerse,
+    testParser, testParserClear,
+    setTheme, setMode, setFont, setCustomBg, setBgOpacity, setCardOpacity,
+    handleBgImage, clearBgImage, toggleFullscreen, toggleSettings,
+    openOutput, showModal, hideModal, copyObsUrl, testObsOutput,
+    copyCurrent, exportHistory, clearHistory,
+    timerStart, timerReset, saveCfg, buildKeywords,
+    sendQueueItem, removeQueueItem, clearQueue,
+    downloadFullBible, cancelDownload, clearBibleDB,
+    testOutputLocal, forceSyncOutput,
+    prevVerse, nextVerse, initSocket
+  };
+})();
+
+window.addEventListener('DOMContentLoaded', App.init);
+</script>
+</body>
+</html></script>
