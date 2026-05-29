@@ -1185,28 +1185,24 @@ const App = (function(){
 
   function tryParseSegment(t){
     const txt = t.toLowerCase().trim();
-    // Pattern 1: Book Chapter:Verse[-EndVerse] (colon or dot)
     let m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)\s*[.:]\s*(\d+)(?:\s*[-–]\s*(\d+))?/i);
     if(m){
       const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = parseInt(m[3]); const endVerse = m[4] ? parseInt(m[4]) : null;
       const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
       if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
     }
-    // Pattern 2: Book Chapter colon Verse (spoken "colon")
     m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)\s+colon\s+(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
     if(m){
       const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = parseInt(m[3]); const endVerse = m[4] ? parseInt(m[4]) : null;
       const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
       if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
     }
-    // Pattern 3: "Book chapter X verse Y" or "Book X Y" or "Book X verse Y"
     m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(?:chapter\s*)?(\d+)\s*(?:verse[s]?\s*)?(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
     if(m){
       const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = m[3] ? parseInt(m[3]) : null; const endVerse = m[4] ? parseInt(m[4]) : null;
       const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
       if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(verse){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; } return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
     }
-    // Pattern 4: Current book + chapter + verse (when book already known from previous detection)
     if(state.currentBook){
       m = txt.match(/(?:chapter\s*)?(\d+)\s*(?:verse[s]?\s*)?(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
       if(m){
@@ -1215,7 +1211,6 @@ const App = (function(){
         if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(verse){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; } return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
       }
     }
-    // Pattern 5: Current book & chapter + verse only (e.g. "verse 16" or "verses 16 to 18")
     if(state.currentBook && state.currentChapter){
       m = txt.match(/(?:verse[s]?\s*)(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
       if(m){
@@ -1224,14 +1219,12 @@ const App = (function(){
         if(bk){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:state.currentChapter, verse, endVerse, ref:bk.n+' '+state.currentChapter+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:state.currentChapter, verse, ref:bk.n+' '+state.currentChapter+':'+verse}; }
       }
     }
-    // Pattern 6: Book + chapter only (no verse) → default to verse 1
     m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)/i);
     if(m){
       const book = normalizeBook(m[1]); const chapter = parseInt(m[2]);
       const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
       if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
     }
-    // Pattern 7: Standalone chapter:verse (when current book known)
     if(state.currentBook){
       m = txt.match(/^(\d+)\s*[.:]\s*(\d+)(?:\s*[-–]\s*(\d+))?$/i);
       if(m){
@@ -1240,7 +1233,6 @@ const App = (function(){
         if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
       }
     }
-    // Pattern 8: Standalone verse number (when current book & chapter known)
     if(state.currentBook && state.currentChapter){
       m = txt.match(/^(\d+)$/);
       if(m){
@@ -1436,14 +1428,11 @@ const App = (function(){
   }
 
   function initDelegatedEvents(){
-    // Global click delegation for ALL data-cmd elements
     document.addEventListener('click', e=>{
       const el = e.target.closest('[data-cmd]');
       if(!el) return;
       const cmd = el.getAttribute('data-cmd');
       if(!cmd) return;
-
-      // Allow radio inputs to check naturally, then process
       if(el.tagName === 'INPUT' && el.type === 'radio'){
         setTimeout(()=>{
           if(cmd === 'pickDevice'){
@@ -1453,9 +1442,7 @@ const App = (function(){
         }, 0);
         return;
       }
-
       e.preventDefault();
-
       if(cmd === 'pickDevice'){
         const deviceId = el.getAttribute('data-device-id');
         if(deviceId) pickDevice(deviceId, el.closest('.device-chip') || el);
@@ -1486,8 +1473,6 @@ const App = (function(){
         if(item){ const idx = parseInt(item.getAttribute('data-idx')); removeQueueItem(idx); }
         return;
       }
-
-      // Direct function mapping for simple commands
       const directMap = {
         toggleListen, stopListen, clearStage, connectMic, manualSearch, randomVerse,
         testParser, testParserClear, setTheme, setMode, setFont, setCustomBg, setBgOpacity, setCardOpacity,
@@ -1498,16 +1483,12 @@ const App = (function(){
       };
       if(directMap[cmd]){ directMap[cmd](); return; }
     });
-
-    // Modal background click-to-close
     document.addEventListener('click', e=>{
       if(e.target.classList.contains('modal-bg')){
         const id = e.target.id;
         if(id) hideModal(id);
       }
     });
-
-    // Keyword chips, recent, history, output log (data-ref based)
     const kw = $('keywordList');
     if(kw){ kw.addEventListener('click', e=>{ const chip = e.target.closest('.keyword-chip'); if(chip){ const ref = chip.getAttribute('data-ref'); if(ref) showVerse(ref); } }); }
     const rl = $('recentList');
@@ -1516,8 +1497,6 @@ const App = (function(){
     if(hl){ hl.addEventListener('click', e=>{ const item = e.target.closest('.history-item'); if(item){ const ref = item.getAttribute('data-ref'); if(ref) showVerse(ref); } }); }
     const ol = $('outputLogList');
     if(ol){ ol.addEventListener('click', e=>{ const item = e.target.closest('.history-item'); if(item){ const ref = item.getAttribute('data-ref'); if(ref) showVerse(ref); } }); }
-
-    // Queue list (data-action based)
     const ql = $('queueList');
     if(ql){ ql.addEventListener('click', e=>{
       const btn = e.target.closest('.btn');
@@ -1529,8 +1508,6 @@ const App = (function(){
       if(action === 'send'){ sendQueueItem(idx); }
       else if(action === 'remove'){ removeQueueItem(idx); }
     }); }
-
-    // Change events for form elements
     document.addEventListener('change', e=>{
       const cmd = e.target.getAttribute('data-change-cmd');
       if(!cmd) return;
@@ -1540,8 +1517,6 @@ const App = (function(){
       if(cmd === 'handleBgImage'){ handleBgImage(e.target); return; }
       if(cmd === 'setCustomBg'){ setCustomBg(e.target.value); return; }
     });
-
-    // Input events for range sliders and text inputs
     document.addEventListener('input', e=>{
       const cmd = e.target.getAttribute('data-input-cmd');
       if(!cmd) return;

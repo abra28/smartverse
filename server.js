@@ -41,20 +41,25 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let filePath = req.url === '/' ? '/index.html' : req.url;
-  filePath = path.join(__dirname, 'public', filePath.split('?')[0]);
+  // FIX: Strip query string FIRST, then check if it's root
+  let urlPath = req.url.split('?')[0];
+  if (urlPath === '/' || urlPath === '') {
+    urlPath = '/index.html';
+  }
 
+  const filePath = path.join(__dirname, 'public', urlPath);
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME[ext] || 'application/octet-stream';
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
+        // File not found - serve index.html for SPA routing
         const indexPath = path.join(__dirname, 'public', 'index.html');
         fs.readFile(indexPath, (err2, indexContent) => {
           if (err2) {
             res.writeHead(500, { 'Content-Type': 'text/plain' });
-            res.end('Server error');
+            res.end('Server error: cannot load index.html');
             return;
           }
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
