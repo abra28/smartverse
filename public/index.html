@@ -1234,9 +1234,10 @@ const App = (function(){
     // Starts-with match
     for(const b of BOOKS){ if(b.n.toLowerCase().startsWith(s)) return b.n; }
     // Plural fallback (e.g. "revelations" -> "revelation", "peters" -> "peter")
-    if(s.endsWith('s')){
+    // Only try if the singular form matches a real book
+    if(s.endsWith('s') && s.length > 3){
       const withoutS = s.slice(0, -1);
-      for(const b of BOOKS){ if(b.n.toLowerCase()===withoutS) return b.n; if(b.n.toLowerCase().startsWith(withoutS)) return b.n; }
+      for(const b of BOOKS){ if(b.n.toLowerCase()===withoutS) return b.n; }
     }
     return s;
   }
@@ -1926,7 +1927,7 @@ const App = (function(){
         if(lastData && lastData.type === 'verse'){
           console.log('[Output] Loaded last verse:', lastData.ref);
           handleBroadcast(lastData);
-          updateOutputStatus('Last: ' + lastData.ref);
+          updateOutputStatus('Loaded last verse: ' + lastData.ref);
         }
       }
     }catch(e){}
@@ -2194,9 +2195,10 @@ const App = (function(){
   }
 
   
-  // ==================== SOCKET.IO BACKEND SYNC ====================
+  // ==================== SOCKET.IO BACKEND SYNC (Additional) ====================
   let socket = null;
   let socketConnected = false;
+  let lastSocketTs = 0;
 
   function getSocketUrl() {
     const override = localStorage.getItem('smartverse_socket_url');
@@ -2220,7 +2222,7 @@ const App = (function(){
       await loadSocketIO();
       if (socket) { try { socket.disconnect(); } catch(e) {} }
       const url = getSocketUrl();
-      socket = io(url, { transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: 10 });
+      socket = io(url, { transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: 10, timeout: 10000 });
 
       socket.on('connect', () => {
         console.log('[Socket] Connected to', url);
@@ -2233,6 +2235,9 @@ const App = (function(){
 
       socket.on('verse_update', (data) => {
         console.log('[Socket] Received verse:', data.ref);
+        // Deduplication: only process if timestamp is newer
+        if (data._ts && data._ts <= lastSocketTs) return;
+        lastSocketTs = data._ts || Date.now();
         handleBroadcast({ ...data, type: 'verse' });
         updateOutputStatus('Live: ' + data.ref);
       });
@@ -2243,7 +2248,8 @@ const App = (function(){
       });
 
       socket.on('mode_update', (data) => {
-        // Use handleBroadcast for proper mode handling in both controller and output views
+        if (data._ts && data._ts <= lastSocketTs) return;
+        lastSocketTs = data._ts || Date.now();
         handleBroadcast({ type: 'mode', mode: data.mode, theme: data.theme });
       });
 
@@ -2285,17 +2291,17 @@ const App = (function(){
     el.className = 'api-pill ' + info.cls;
   }
 
-  // Override broadcast to include socket
+  // Wrap broadcast to ALSO send via Socket.IO (keep original localStorage + BroadcastChannel)
   const _origBroadcast = broadcast;
   broadcast = function(data) {
     _origBroadcast(data);
     if (socket && socket.connected) {
       if (data.type === 'verse') {
-        socket.emit('display_verse', { ref: data.ref, text: data.text, version: data.version, theme: data.theme, mode: data.mode });
+        socket.emit('display_verse', { ref: data.ref, text: data.text, version: data.version, theme: data.theme, mode: data.mode, _ts: data._ts || Date.now() });
       } else if (data.type === 'clear') {
         socket.emit('clear_verse');
       } else if (data.type === 'mode') {
-        socket.emit('set_mode', { mode: data.mode, theme: document.documentElement.getAttribute('data-theme') || 'dark' });
+        socket.emit('set_mode', { mode: data.mode, theme: document.documentElement.getAttribute('data-theme') || 'dark', _ts: data._ts || Date.now() });
       }
     }
   };
