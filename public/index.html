@@ -1185,24 +1185,28 @@ const App = (function(){
 
   function tryParseSegment(t){
     const txt = t.toLowerCase().trim();
+    // Pattern 1: Book Chapter:Verse[-EndVerse] (colon or dot)
     let m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)\s*[.:]\s*(\d+)(?:\s*[-–]\s*(\d+))?/i);
     if(m){
       const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = parseInt(m[3]); const endVerse = m[4] ? parseInt(m[4]) : null;
       const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
       if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
     }
+    // Pattern 2: Book Chapter colon Verse (spoken "colon")
     m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)\s+colon\s+(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
     if(m){
       const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = parseInt(m[3]); const endVerse = m[4] ? parseInt(m[4]) : null;
       const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
       if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
     }
+    // Pattern 3: Book chapter X verse Y [to/through/and Z]
     m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(?:chapter\s*)?(\d+)\s*(?:verse[s]?\s*)?(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
     if(m){
       const book = normalizeBook(m[1]); const chapter = parseInt(m[2]); const verse = m[3] ? parseInt(m[3]) : null; const endVerse = m[4] ? parseInt(m[4]) : null;
       const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
       if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(verse){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; } return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
     }
+    // Pattern 4: Current book + chapter + verse (when book already known)
     if(state.currentBook){
       m = txt.match(/(?:chapter\s*)?(\d+)\s*(?:verse[s]?\s*)?(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
       if(m){
@@ -1211,6 +1215,7 @@ const App = (function(){
         if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(verse){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; } return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
       }
     }
+    // Pattern 5: Current book & chapter + verse only (e.g. "verse 16" or "verses 16 to 18")
     if(state.currentBook && state.currentChapter){
       m = txt.match(/(?:verse[s]?\s*)(\d+)(?:\s+(?:through|to|unto|and)\s+(\d+))?/i);
       if(m){
@@ -1219,12 +1224,14 @@ const App = (function(){
         if(bk){ if(endVerse && endVerse>verse) return {book:bk.n, chapter:state.currentChapter, verse, endVerse, ref:bk.n+' '+state.currentChapter+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:state.currentChapter, verse, ref:bk.n+' '+state.currentChapter+':'+verse}; }
       }
     }
+    // Pattern 6: Book + chapter only (no verse) → default to verse 1
     m = txt.match(/(\d?\s*[a-z]+(?:\s+of\s+[a-z]+)?)\s*(\d+)/i);
     if(m){
       const book = normalizeBook(m[1]); const chapter = parseInt(m[2]);
       const bk = BOOKS.find(b=>b.n.toLowerCase()===book.toLowerCase());
       if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); return {book:bk.n, chapter:ch, ref:bk.n+' '+ch}; }
     }
+    // Pattern 7: Standalone chapter:verse (when current book known)
     if(state.currentBook){
       m = txt.match(/^(\d+)\s*[.:]\s*(\d+)(?:\s*[-–]\s*(\d+))?$/i);
       if(m){
@@ -1233,6 +1240,7 @@ const App = (function(){
         if(bk){ const ch = Math.max(1, Math.min(chapter||1, bk.ch)); if(endVerse && endVerse>verse) return {book:bk.n, chapter:ch, verse, endVerse, ref:bk.n+' '+ch+':'+verse+'-'+endVerse}; return {book:bk.n, chapter:ch, verse, ref:bk.n+' '+ch+':'+verse}; }
       }
     }
+    // Pattern 8: Standalone verse number (when current book & chapter known)
     if(state.currentBook && state.currentChapter){
       m = txt.match(/^(\d+)$/);
       if(m){
@@ -1250,7 +1258,13 @@ const App = (function(){
     s = s.replace(/^first\s+/,'1 ').replace(/^second\s+/,'2 ').replace(/^third\s+/,'3 ');
     s = s.replace(/^1st\s+/,'1 ').replace(/^2nd\s+/,'2 ').replace(/^3rd\s+/,'3 ');
     s = s.replace(/^the\s+book\s+of\s+/,'');
+    // Remove trailing 's' for plurals like "peters" -> "peter", "revelations" -> "revelation"
+    s = s.replace(/s$/,'');
+    // Check phonetic aliases
+    if(PHONETIC_BOOKS[s]){ s = PHONETIC_BOOKS[s]; }
+    // Direct match
     for(const b of BOOKS){ if(b.n.toLowerCase()===s) return b.n; if(b.a.toLowerCase()===s.replace(/\s/g,'')) return b.n; }
+    // Starts-with match
     for(const b of BOOKS){ if(b.n.toLowerCase().startsWith(s)) return b.n; }
     return s;
   }

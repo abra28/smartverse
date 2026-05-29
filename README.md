@@ -50,8 +50,8 @@ node server.js
 
 ```
 smartverse/
-├── server.js          # Node.js HTTP + Socket.IO server
-├── package.json       # Dependencies
+├── server.js          # Express + Socket.IO server
+├── package.json       # Dependencies (express + socket.io)
 ├── public/
 │   └── index.html     # SmartVerse frontend (controller + output)
 ├── render.yaml        # Render deploy config
