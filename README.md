@@ -55,6 +55,5 @@ smartverse/
 ├── public/
 │   └── index.html     # SmartVerse frontend (controller + output)
 ├── render.yaml        # Render deploy config
-├── Dockerfile         # Optional Docker deploy
 └── README.md          # This file
 ```
