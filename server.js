@@ -14,7 +14,6 @@ console.log('[Startup] CWD:', process.cwd());
 const publicDir = path.join(__dirname, 'public');
 console.log('[Startup] public dir:', publicDir);
 
-// Check if public folder exists
 const fs = require('fs');
 if (!fs.existsSync(publicDir)) {
   console.error('[FATAL] public/ directory does NOT exist!');
@@ -33,7 +32,6 @@ console.log('[Startup] public/ directory OK');
 console.log('[Startup] public/index.html OK');
 
 // ==================== EXPRESS MIDDLEWARE ====================
-// CORS for all requests
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -41,7 +39,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
@@ -51,19 +48,14 @@ app.get('/health', (req, res) => {
 });
 
 // Serve static files from public/ folder
-// Express handles all edge cases: EISDIR, path traversal, missing files, etc.
-app.use(express.static(publicDir, {
-  fallthrough: true  // If file not found, continue to next handler (SPA fallback)
-}));
+app.use(express.static(publicDir, { fallthrough: true }));
 
 // SPA fallback: for ANY unmatched route, serve index.html
-// This handles /, /?view=output, /anything, etc.
 app.get('*', (req, res) => {
   console.log('[SPA Fallback]', req.url, '-> index.html');
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
-// Error handler
 app.use((err, req, res, next) => {
   console.error('[Express Error]', err.message);
   res.status(500).send('Server error: ' + err.message);
