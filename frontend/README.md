@@ -1,6 +1,6 @@
-# SmartVerse Unified
+# SmartVerse 1.0 — Fixed & Unified
 
-**One server. Everything works.** Frontend + Socket.IO backend in a single deploy.
+**Frontend + Backend in one deploy.** All buttons fixed, softer UI, works standalone or on Render.
 
 ## Deploy to Render (Free)
 
