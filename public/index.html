@@ -1214,6 +1214,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow
       <p>Waiting for scripture from the controller window...</p>
       <div style="margin-top:12px;font-size:11px;color:var(--text-faint);max-width:320px;text-align:center;line-height:1.5">
         <div id="output-status" style="margin-bottom:8px">Status: Initializing...</div>
+        <div id="sync-badge" style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;margin-bottom:8px;background:rgba(107,107,138,0.15);color:#6b6b8a;border:1px solid rgba(107,107,138,0.2);">● Standalone Mode</div>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
           <button class="btn btn-sm btn-accent" data-cmd="testOutputLocal">Test Display</button>
           <button class="btn btn-sm btn-ghost" data-cmd="forceSyncOutput">Force Sync</button>
@@ -2820,6 +2821,15 @@ const App = (function(){
   }
 
   function handleBroadcast(data){
+    // Update sync badge to show we're receiving data
+    const badge = document.getElementById('sync-badge');
+    if(badge){
+      badge.textContent = '● Live Sync Active';
+      badge.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;margin-bottom:8px;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);';
+    }
+    // Also update status text
+    const st = document.getElementById('output-status');
+    if(st && data.ref) st.textContent = 'Received: ' + data.ref;
     if(!data || !data.type) return;
     if(data.type==='verse'){
       const vRef = $('vRef'), vBody = $('vBody'), vMeta = $('vMeta');
@@ -2888,6 +2898,20 @@ const App = (function(){
   function initOutputReceiver(){
     console.log('[SmartVerse Output] Receiver initialized');
     updateOutputStatus('Waiting for controller...');
+
+    // IMMEDIATE: Check localStorage for last verse (instant sync from same browser)
+    try{
+      const lastPayload = localStorage.getItem('smartverse_last_verse_v14');
+      if(lastPayload){
+        const data = JSON.parse(lastPayload);
+        if(data && data.type === 'verse' && Date.now() - (data._ts||0) < 300000){ // 5 min freshness
+          console.log('[Output] Restored verse from localStorage:', data.ref);
+          handleBroadcast(data);
+          updateOutputStatus('Restored: ' + data.ref);
+        }
+      }
+    }catch(e){ console.warn('[Output] localStorage restore failed:', e); }
+
     // Check for verse in URL query param
     try{
       const urlParams = new URLSearchParams(window.location.search);
@@ -2938,7 +2962,7 @@ const App = (function(){
         const data = JSON.parse(raw);
         if(data._ts && data._ts !== lastTs){ lastTs = data._ts; handleBroadcast(data); updateOutputStatus('Live: ' + (data.ref||data.type)); }
       }catch(e){}
-    }, 100);
+    }, 50); // 50ms = 20 checks/second for near-instant local sync
     window.addEventListener('message', e=>{ if(e.data && e.data.type){ handleBroadcast(e.data); updateOutputStatus('Live: ' + (e.data.ref||e.data.type)); } });
   }
 
@@ -2957,6 +2981,23 @@ const App = (function(){
   }
 
   function forceSyncOutput(){
+    // Try Socket.io server sync first (if bridge is active and connected)
+    if(window.SmartVerseBridge && window.SmartVerseBridge.isConnected && window.SmartVerseBridge.isConnected()){
+      const raw = localStorage.getItem('smartverse_last_verse_v14');
+      if(raw){
+        try{
+          const data = JSON.parse(raw);
+          if(data && data.type === 'verse'){
+            // Re-broadcast via server to force all displays to update
+            if(window._svBroadcastHook) window._svBroadcastHook(data);
+            handleBroadcast(data);
+            updateOutputStatus('Server synced: ' + data.ref);
+            return;
+          }
+        }catch(e){}
+      }
+    }
+    // Fallback to localStorage sync
     try{
       const raw = localStorage.getItem('smartverse_last_verse_v14');
       if(raw){

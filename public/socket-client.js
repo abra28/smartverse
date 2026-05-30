@@ -1,7 +1,7 @@
 /**
  * SmartVerse 1.0 — Socket.io Client Bridge
  * Drop this into your index.html BEFORE the closing </body> tag
- * It intercepts localStorage broadcasts and sends them via Socket.io
+ * It hooks into the existing broadcast system via window._svBroadcastHook
  * Falls back to localStorage if the server is unreachable
  */
 
@@ -9,11 +9,6 @@
   'use strict';
 
   const CONFIG = {
-    // CHANGE THIS to your deployed backend URL
-    // Examples:
-    //   'https://smartverse-backend.onrender.com'
-    //   'http://localhost:3000'
-    //   'https://api.yourchurch.com'
     SERVER_URL: window.location.hostname === 'localhost' 
       ? 'http://localhost:3000' 
       : 'https://smartverse-y2ro.onrender.com',
@@ -22,25 +17,39 @@
       || localStorage.getItem('smartverse_session_id') 
       || 'default-session-' + Math.random().toString(36).substr(2, 8),
 
-    RECONNECT_DELAY: 3000,
+    RECONNECT_DELAY: 2000,
     MAX_RECONNECT_ATTEMPTS: 10
   };
 
-  // Persist session ID
   localStorage.setItem('smartverse_session_id', CONFIG.SESSION_ID);
 
   let socket = null;
   let isConnected = false;
   let reconnectAttempts = 0;
   let fallbackMode = false;
+  let isOutput = window.location.search.includes('view=output');
+  let isController = !isOutput;
 
   // ===================== SOCKET CONNECTION =====================
   function initSocket(){
     if(typeof io === 'undefined'){
-      console.warn('[SmartVerse Bridge] Socket.io client not loaded. Using fallback mode.');
-      enableFallback();
+      console.warn('[SV Bridge] Socket.io client not loaded. Loading from CDN...');
+      loadSocketIOFromCDN();
       return;
     }
+    connect();
+  }
+
+  function loadSocketIOFromCDN(){
+    const script = document.createElement('script');
+    script.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
+    script.onload = () => { console.log('[SV Bridge] Socket.io loaded from CDN'); connect(); };
+    script.onerror = () => { console.error('[SV Bridge] Failed to load Socket.io'); enableFallback(); };
+    document.head.appendChild(script);
+  }
+
+  function connect(){
+    if(typeof io === 'undefined'){ enableFallback(); return; }
 
     socket = io(CONFIG.SERVER_URL, {
       transports: ['websocket', 'polling'],
@@ -54,42 +63,32 @@
       isConnected = true;
       reconnectAttempts = 0;
       fallbackMode = false;
-      console.log('[SmartVerse Bridge] Connected to server:', CONFIG.SERVER_URL);
+      console.log('[SV Bridge] ✅ Connected to server:', CONFIG.SERVER_URL);
 
-      // Determine role from URL
-      const isOutput = window.location.search.includes('view=output');
       const role = isOutput ? 'display' : 'controller';
-
       socket.emit('join_session', {
         sessionId: CONFIG.SESSION_ID,
         role: role
       });
+      console.log('[SV Bridge] Joined session', CONFIG.SESSION_ID, 'as', role);
 
-      // Show connection indicator
       showConnectionStatus('connected');
-    });
 
-    socket.on('disconnect', () => {
-      isConnected = false;
-      console.warn('[SmartVerse Bridge] Disconnected from server');
-      showConnectionStatus('disconnected');
-
-      // If we were connected before, try to reconnect
-      if(reconnectAttempts < CONFIG.MAX_RECONNECT_ATTEMPTS){
-        reconnectAttempts++;
-        setTimeout(() => {
-          if(!isConnected){
-            console.log('[SmartVerse Bridge] Reconnect attempt', reconnectAttempts);
-            socket.connect();
-          }
-        }, CONFIG.RECONNECT_DELAY);
-      } else {
-        enableFallback();
+      // If we're the output window, immediately request current state
+      if(isOutput){
+        updateOutputBadge('connected');
       }
     });
 
+    socket.on('disconnect', (reason) => {
+      isConnected = false;
+      console.warn('[SV Bridge] ❌ Disconnected:', reason);
+      showConnectionStatus('disconnected');
+      if(isOutput) updateOutputBadge('disconnected');
+    });
+
     socket.on('connect_error', (err) => {
-      console.warn('[SmartVerse Bridge] Connection error:', err.message);
+      console.warn('[SV Bridge] Connection error:', err.message);
       if(reconnectAttempts >= 3 && !fallbackMode){
         enableFallback();
       }
@@ -97,26 +96,27 @@
 
     // ===================== RECEIVE EVENTS FROM SERVER =====================
 
-    // Verse changed (from controller → display/viewers)
     socket.on('verse_changed', (data) => {
-      if(window.location.search.includes('view=output')){
-        // We're in the output window — display the verse
+      console.log('[SV Bridge] Received verse_changed:', data.ref);
+      if(isOutput){
         handleServerVerse(data);
+        updateOutputBadge('live');
       }
     });
 
-    // Display cleared
     socket.on('display_cleared', () => {
-      if(window.location.search.includes('view=output')){
+      console.log('[SV Bridge] Received display_cleared');
+      if(isOutput){
         const outCard = document.getElementById('outCard');
         const outEmpty = document.getElementById('output-empty');
         if(outCard) outCard.style.display = 'none';
         if(outEmpty) outEmpty.style.display = 'flex';
+        updateOutputBadge('waiting');
       }
     });
 
-    // Settings updated
     socket.on('settings_updated', (settings) => {
+      console.log('[SV Bridge] Settings updated:', settings);
       if(settings.theme){
         document.documentElement.setAttribute('data-theme', settings.theme);
         const selT = document.getElementById('selTheme');
@@ -125,22 +125,20 @@
       if(settings.mode){
         const stage = document.getElementById('stage');
         if(stage){
-          Array.from(stage.classList).forEach(c => {
-            if(c.startsWith('mode-')) stage.classList.remove(c);
-          });
+          Array.from(stage.classList).forEach(c => { if(c.startsWith('mode-')) stage.classList.remove(c); });
           stage.classList.add('mode-' + settings.mode);
         }
       }
     });
 
-    // Session state (on reconnect)
     socket.on('session_state', (state) => {
-      if(state.currentVerse && window.location.search.includes('view=output')){
+      console.log('[SV Bridge] Received session_state, currentVerse:', state.currentVerse ? state.currentVerse.ref : 'none');
+      if(isOutput && state.currentVerse){
         handleServerVerse(state.currentVerse);
+        updateOutputBadge('live');
       }
     });
 
-    // Queue updated
     socket.on('queue_updated', (queue) => {
       if(window.App && window.App.state){
         window.App.state.queue = queue || [];
@@ -153,61 +151,54 @@
   function enableFallback(){
     if(fallbackMode) return;
     fallbackMode = true;
-    console.log('[SmartVerse Bridge] Switched to fallback mode (localStorage)');
+    console.log('[SV Bridge] Switched to fallback mode (localStorage only)');
     showConnectionStatus('fallback');
-
-    // The original localStorage-based system will continue working
-    // We just won't send/receive via Socket.io
+    if(isOutput) updateOutputBadge('offline');
   }
 
-  // ===================== INTERCEPT BROADCASTS =====================
-  // Override the original broadcast function in the App
-  function patchBroadcast(){
-    if(!window.App || !window.App.broadcast){
-      console.warn('[SmartVerse Bridge] App not ready, will retry...');
-      setTimeout(patchBroadcast, 500);
+  // ===================== BROADCAST HOOK (CONTROLLER ONLY) =====================
+  // This function is called by the original broadcast() function via window._svBroadcastHook
+  function broadcastHook(data){
+    if(!isConnected || !socket){
+      console.log('[SV Bridge] Hook called but not connected (fallback mode)');
       return;
     }
 
-    const originalBroadcast = window.App.broadcast;
+    console.log('[SV Bridge] Hook broadcasting via Socket.io:', data.type, data.ref || '');
 
-    window.App.broadcast = function(data){
-      // Always do the original localStorage broadcast (for redundancy)
-      originalBroadcast(data);
-
-      // Also send via Socket.io if connected
-      if(isConnected && socket){
-        try{
-          if(data.type === 'verse'){
-            socket.emit('change_verse', {
-              ref: data.ref,
-              text: data.text,
-              version: data.version,
-              theme: data.theme,
-              mode: data.mode
-            });
-          } else if(data.type === 'clear'){
-            socket.emit('clear_display');
-          } else if(data.type === 'mode'){
-            socket.emit('update_settings', { mode: data.mode, theme: data.theme });
-          } else if(data.type === 'theme'){
-            socket.emit('update_settings', { theme: data.theme });
-          } else if(data.type === 'qr'){
-            socket.emit('update_settings', { qrEnabled: data.enabled });
-          } else if(data.type === 'smartThemes'){
-            socket.emit('update_settings', { smartThemes: data.enabled });
-          }
-        } catch(e){
-          console.warn('[SmartVerse Bridge] Socket emit failed:', e.message);
-        }
+    try{
+      if(data.type === 'verse'){
+        socket.emit('change_verse', {
+          ref: data.ref,
+          text: data.text,
+          version: data.version,
+          theme: data.theme,
+          mode: data.mode
+        });
+      } else if(data.type === 'clear'){
+        socket.emit('clear_display');
+      } else if(data.type === 'mode'){
+        socket.emit('update_settings', { mode: data.mode, theme: data.theme });
+      } else if(data.type === 'theme'){
+        socket.emit('update_settings', { theme: data.theme });
+      } else if(data.type === 'qr'){
+        socket.emit('update_settings', { qrEnabled: data.enabled });
+      } else if(data.type === 'smartThemes'){
+        socket.emit('update_settings', { smartThemes: data.enabled });
       }
-    };
-
-    console.log('[SmartVerse Bridge] Broadcast patched successfully');
+    } catch(e){
+      console.warn('[SV Bridge] Socket emit failed:', e.message);
+    }
   }
+
+  // Register the hook so the original broadcast() function calls us
+  window._svBroadcastHook = broadcastHook;
+  console.log('[SV Bridge] Broadcast hook registered on window._svBroadcastHook');
 
   // ===================== OUTPUT WINDOW HANDLER =====================
   function handleServerVerse(data){
+    console.log('[SV Bridge] Updating output DOM for:', data.ref);
+
     const outRef = document.getElementById('outRef');
     const outBody = document.getElementById('outBody');
     const outMeta = document.getElementById('outMeta');
@@ -242,10 +233,39 @@
         img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(qrData);
       }
     }
+
+    // Update status badge
+    const statusEl = document.getElementById('output-status');
+    if(statusEl) statusEl.textContent = 'Live: ' + data.ref;
   }
 
-  // ===================== UI INDICATOR =====================
+  // ===================== OUTPUT BADGE UPDATER =====================
+  function updateOutputBadge(state){
+    const badge = document.getElementById('sync-badge');
+    if(!badge) return;
+
+    if(state === 'connected'){
+      badge.textContent = '● Server Connected';
+      badge.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;margin-bottom:8px;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);';
+    } else if(state === 'live'){
+      badge.textContent = '● Live Sync Active';
+      badge.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;margin-bottom:8px;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);';
+    } else if(state === 'disconnected'){
+      badge.textContent = '● Reconnecting...';
+      badge.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;margin-bottom:8px;background:rgba(234,179,8,0.15);color:#eab308;border:1px solid rgba(234,179,8,0.3);';
+    } else if(state === 'offline'){
+      badge.textContent = '● Offline Mode';
+      badge.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;margin-bottom:8px;background:rgba(107,107,138,0.15);color:#6b6b8a;border:1px solid rgba(107,107,138,0.3);';
+    } else if(state === 'waiting'){
+      badge.textContent = '● Waiting for verse...';
+      badge.style.cssText = 'display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;margin-bottom:8px;background:rgba(107,107,138,0.15);color:#6b6b8a;border:1px solid rgba(107,107,138,0.3);';
+    }
+  }
+
+  // ===================== UI INDICATOR (CONTROLLER ONLY) =====================
   function showConnectionStatus(status){
+    if(isOutput) return; // Output window uses the badge inside the empty state
+
     let el = document.getElementById('sv-connection-status');
     if(!el){
       el = document.createElement('div');
@@ -267,43 +287,44 @@
   }
 
   // ===================== INIT =====================
-  // Load Socket.io client from CDN if not already loaded
+  // Load Socket.io client from server first, fallback to CDN
   if(typeof io === 'undefined'){
     const script = document.createElement('script');
     script.src = CONFIG.SERVER_URL + '/socket.io/socket.io.js';
-    script.onload = () => {
-      initSocket();
-      patchBroadcast();
-    };
+    script.onload = () => { console.log('[SV Bridge] Socket.io loaded from server'); initSocket(); };
     script.onerror = () => {
-      console.warn('[SmartVerse Bridge] Failed to load Socket.io client');
-      enableFallback();
+      console.warn('[SV Bridge] Server Socket.io failed, trying CDN...');
+      loadSocketIOFromCDN();
     };
     document.head.appendChild(script);
   } else {
     initSocket();
-    patchBroadcast();
   }
 
-  // Also try to load from CDN as backup
-  setTimeout(() => {
-    if(typeof io === 'undefined'){
-      const script = document.createElement('script');
-      script.src = 'https://cdn.socket.io/4.7.5/socket.io.min.js';
-      script.onload = () => {
-        initSocket();
-        patchBroadcast();
-      };
-      document.head.appendChild(script);
-    }
-  }, 2000);
-
-  // Expose config for debugging
+  // Expose for debugging
   window.SmartVerseBridge = {
     config: CONFIG,
     socket: () => socket,
     isConnected: () => isConnected,
-    reconnect: () => { if(socket) socket.connect(); }
+    reconnect: () => { if(socket) socket.connect(); },
+    forceSync: () => {
+      const raw = localStorage.getItem('smartverse_last_verse_v14');
+      if(raw && socket && isConnected){
+        try{
+          const data = JSON.parse(raw);
+          if(data.type === 'verse'){
+            socket.emit('change_verse', {
+              ref: data.ref, text: data.text, version: data.version,
+              theme: document.documentElement.getAttribute('data-theme') || 'dark',
+              mode: 'center'
+            });
+            console.log('[SV Bridge] Force synced verse to server:', data.ref);
+          }
+        }catch(e){}
+      }
+    }
   };
+
+  console.log('[SV Bridge] Initialized. Output mode:', isOutput, 'Session:', CONFIG.SESSION_ID);
 
 })();
