@@ -3009,10 +3009,12 @@ const App = (function(){
   }
 
   function openOutput(){
-    const url = location.href.split('?')[0].split('#')[0] + '?view=output';
+    // Pass session ID so output window joins same Socket.io room
+    const sessionId = localStorage.getItem('smartverse_session_id') || 'smartverse-live';
+    const url = location.href.split('?')[0].split('#')[0] + '?view=output&session=' + encodeURIComponent(sessionId);
     state.outputWin = window.open(url, 'smartverse_output_v14', 'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no');
     if(!state.outputWin || state.outputWin.closed){ toast('Popup blocked! Allow popups for this site.','bad'); return; }
-    // Immediately push current verse to popup
+    // Immediately push current verse to popup via all channels
     setTimeout(()=>{
       const card = $('verseCard');
       if(card && card.style.display !== 'none'){
